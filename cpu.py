@@ -6,7 +6,9 @@ from memory import Memory
 
 # Monitor - TODO
 
-# Input Decoder - TODO - 🛠️ in progress
+# Input Module
+## Input Decoder - TODO - 🛠️ in progress
+## Instruction Buffer - TODO - 🛠️ in progress
 
 # CDB - TODO
 
