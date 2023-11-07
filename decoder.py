@@ -5,7 +5,7 @@ class Instruction():
         self.inst_type = optype
         self.operands_type = operands
     #TYPE OF INSTRUCTION AND OPERANDS 2 methods
-
+    #type of instruction destination 2 operands return result destination and value into cdb modules add and mult are classes and exec module class which holds both
 
 class Decoder:
     count = 0
