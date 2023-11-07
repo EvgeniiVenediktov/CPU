@@ -1,5 +1,6 @@
 # Load/Store Buffer
-from cdbreceiver import CDBReceiver, CentralDataBus
+from cdb import CentralDataBus
+from cdbreceiver import CDBReceiver
 from queue import Queue
 
 class LdStConfig():

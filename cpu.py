@@ -10,7 +10,7 @@ from memory import Memory
 ## Input Decoder - TODO - 🛠️ in progress
 ## Instruction Buffer - TODO - 🛠️ in progress
 
-# CDB - TODO
+# CDB - DONE ✔️
 
 # Register Module:
 ## Register Alias Table - TODO
@@ -20,13 +20,15 @@ from memory import Memory
 ## Reorder Buffer - TODO
 ## Renaming Module - TODO
 
+# Branch predictor - TODO
+
 # Execution Module
 ## Functioanal Modules (Adders, Multipliers) - TODO
 ## Reservation Stations - TODO
 
 # Memory Module
 ## Address Resolver - TODO
-## Load/Store Buffers - TODO
+## Load/Store Buffers - TODO - 🛠️ in progress
 ## Memory - DONE ✔️
 mem_init_file = ""
 hard_memory = Memory(mem_init_file)
