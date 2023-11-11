@@ -13,16 +13,30 @@ class TestRS(unittest.TestCase):
         # Assert
         for name in d:
             val = d[name]
+            if name == 'result':
+                self.assertIsNone(val, name)
+                continue
             self.assertIsNotNone(val, name)
     
     def test_update(self):
-        self.skipTest("TODO")
         # Arrange
-        e = Entry()
-        #attrs = {'busy':1,'op':op,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2}
+        e_int = Entry()
+        e_float = Entry()
+        attrs_int = {'busy':1,'op':"addi", 'rob':"F1", 'val1':int(2),'val2':int(3), 'dep1':"",'dep2':"",'result':None}
+        attrs_float = {'busy':1,'op':"addd", 'rob':"F2", 'val1':float(2),'val2':float(3), 'dep1':"",'dep2':"",'result':None}
         # Action
-
+        e_int.update(busy=1,op="addi",rob="F1",val1=2,val2=3)
+        e_float.update(busy=1,op="addd",rob="F2",val1=2.0,val2=3.0)
         # Assert
+        d = vars(e_int)
+        for field in d:
+            val = d[field]
+            self.assertEqual(val, attrs_int[field], field)
+
+        d = vars(e_float)
+        for field in d:
+            val = d[field]
+            self.assertEqual(val, attrs_float[field], field)
 
 
 if __name__ == '__main__':

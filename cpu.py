@@ -23,7 +23,8 @@ from memory import Memory
 # Branch predictor - TODO
 
 # Execution Module
-## Functioanal Modules (Adders, Multipliers) - TODO
+## Functional Modules (Adders, Multipliers) - TODO
+## Functional Module Buffers (Int buffer, Float buffer) - TODO - store values here if CDB is ocuppied
 ## Reservation Stations - TODO
 
 # Memory Module
