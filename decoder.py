@@ -1,58 +1,63 @@
-from queue import Queue
-
 class Instruction():
-    def __init__(self, optype, operands) -> None:
+    def __init__(self, optype, operands, num) -> None:
         self.inst_type = optype
-        self.operands_type = operands
-    #TYPE OF INSTRUCTION AND OPERANDS 2 methods
-    #type of instruction destination 2 operands return result destination and value into cdb modules add and mult are classes and exec module class which holds both
+        self.operands = operands
+        self.number = num
+    
+    def __str__(self) -> str:
+        return str(vars(self))
+
 
 class Decoder:
-    count = 0
     def __init__(self,filename):
         self.filename = filename
         self.instructions = []
         self.arguments = []
+        self.instances = []
 
     def run(self):
+        k = 0
         with open (self.filename, "r") as f:
             for line in f:
                 instruction,argument = line.split()
                 arguments = argument.split(',')
-                self.instructions.append(instruction)
-                self.arguments.append(arguments)
                 for i in range(len(arguments)):
                     if arguments[i].find('R') == -1:
                         arguments[i] = int(arguments[i])
+                ins = Instruction(instruction, arguments, k)
+                self.instances.append(ins)
+                k = k + 1
         f.close()
-                
-    def issue(self):              
-        Decoder.count = Decoder.count + 1 
-        with open (self.filename, "r") as file:
-            if len(file.readlines()) >= Decoder.count:
-                file.close()
-                Instruction
-                #return(self.instructions[Decoder.count-1], self.arguments[Decoder.count-1])
-            
+        return(self.instances)
+
 class InstBuff:
-    i = 0
     def __init__(self,filename):
-        self.mem = Queue(100)
-        self.dex = Decoder(filename)
-        self.dex.run()
+        self.mem = []
+        self.filename = filename
+        self.index = 0
 
     def refill(self):
-        self.mem.put(self.dex.issue())
+        deck = Decoder(self.filename)
+        self.mem = deck.run()
+        
+    def issue(self, i=None):
+        if self.index >= len(self.mem) :
+            return None
 
-    def pull(self):
-        return(self.mem.get())
+        if i == None:
+            v = self.mem[self.index]
+            self.index += 1
+            return(v)
+        
+        if len(self.mem) >= i:
+            return(self.mem[i])
+
     
-#deck = Decoder('TestFile.txt')
-#deck.run()
 lex = InstBuff('TestFile.txt')
 lex.refill()
-lex.refill()
-lex.refill()
-lex.refill()
-print(lex.pull())
-print(lex.pull())
+print(lex.issue())
+print(lex.issue())
+print(lex.issue())
+print(lex.issue())
+print(lex.issue())
+print(lex.issue())
