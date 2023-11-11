@@ -37,15 +37,16 @@ hard_memory = Memory(mem_init_file)
 ### Run for N clock cycles: ###
 NUM_OF_CYCLES = 1000
 for cycle in range(NUM_OF_CYCLES):
-    ### ISSUE Stage
-
-    ### EXECUTION Stage
+    ### COMMIT Stage
+    
+    ### WRITEBACK Stage
 
     ### MEMORY Stage
 
-    ### WRITEBACK Stage
+    ### EXECUTION Stage
 
-    ### COMMIT Stage
+    ### ISSUE Stage
+  
     pass 
 
 ### Create Output TimeTable: ###

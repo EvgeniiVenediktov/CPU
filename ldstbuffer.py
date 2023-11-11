@@ -1,6 +1,6 @@
 # Load/Store Buffer
 from cdb import CentralDataBus
-from cdbreceiver import CDBReceiver
+from cdbconsumer import CDBConsumer
 from queue import Queue
 
 class LdStConfig():
@@ -29,7 +29,7 @@ class _MemBuffer():
         return False
     
 
-class LoadStoreBuffer(CDBReceiver):
+class LoadStoreBuffer(CDBConsumer):
     """
         Load/Store Buffer.
         Stores LD,SD instructions with their known source and destination adderesses.

@@ -3,8 +3,7 @@ class NameAndValue():
     def __init__(self, name, value) -> None:
         self.name = name
         self.value = value
-    def unpack(self) -> tuple(str, float):
-        return self.name, self.value
+
     def value(self) -> float:
         return self.value
     def name(self) -> str:
