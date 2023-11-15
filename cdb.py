@@ -1,5 +1,5 @@
 # CDB - Central Data Bus module
-class NameAndValue():
+class NameAndValue:
     def __init__(self, name, value) -> None:
         self.name = name
         self.value = value
@@ -9,7 +9,7 @@ class NameAndValue():
     def name(self) -> str:
         return self.name
 
-class CentralDataBus():
+class CentralDataBus:
     """ Central Data Bus holds current ready values
     """
     # TODO: ask if value can sit for multiple cycles

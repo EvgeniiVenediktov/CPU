@@ -5,7 +5,7 @@ from reordering import RenamedInstruction
 
 type number = int | float
 
-class Entry():
+class Entry:
     """```
     Busy - is it busy     - `busy`  
     ROD  - ROB entry      - `rob`

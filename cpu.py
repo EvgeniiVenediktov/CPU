@@ -25,7 +25,7 @@ from memory import Memory
 # Execution Module
 ## Functional Modules (Adders, Multipliers) - TODO
 ## Functional Module Buffers (Int buffer, Float buffer) - TODO - store values here if CDB is ocuppied
-## Reservation Stations - TODO
+## Reservation Stations - 🛠️ in progress
 
 # Memory Module
 ## Address Resolver - TODO

@@ -1,7 +1,7 @@
 # CDB Consumer super-class
 from cdb import CentralDataBus, NameAndValue
 
-class CDBConsumer():
+class CDBConsumer:
     """
         CDB Consumer is a superclass.
         It's heirs are able to listen to CDB (Central Data Bus) 

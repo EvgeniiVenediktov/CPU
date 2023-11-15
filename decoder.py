@@ -1,4 +1,4 @@
-class Instruction():
+class Instruction:
     def __init__(self, optype, operands, num) -> None:
         self.inst_type = optype
         self.operands = operands
