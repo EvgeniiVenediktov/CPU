@@ -8,7 +8,7 @@ from memory import Memory
 
 # Input Module
 ## Input Decoder - DONE ✔️
-## Instruction Buffer - TODO - 🛠️ in progress
+## Instruction Buffer - DONE ✔️
 
 # CDB - DONE ✔️
 
