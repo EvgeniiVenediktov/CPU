@@ -123,11 +123,6 @@ for cycle in range(NUM_OF_CYCLES):
     t = instr.inst_type
     if t == "LD" or "SD":
         rs_type = LD_STORE_RS_TYPE
-        """Check if resources available - LD/ST buffer entry
-        ! Stall issue if any needed resource not available !"""
-        _ = issue_ld_sd_instruction(instr) # TODO call AddressResolver, write to LD/SD buffer
-        monitor.mark_issue(instr.id, cycle)
-        continue
     elif t == "Addi" or "Sub":
         rs_type = INT_ADDER_RS_TYPE
     elif t == "Add.d" or "Sub.d":
@@ -135,7 +130,7 @@ for cycle in range(NUM_OF_CYCLES):
     elif t == "Mult.d":
         rs_type = DEC_MULTP_RS_TYPE
     
-    #2. Check if resources available - Appropriate RS entry
+    #2. Check if resources available - Appropriate RS entry or LD/SD buf entry
     matching_rs = res_stations[rs_type]
     if not matching_rs.entry_is_free():
         continue

@@ -2,16 +2,11 @@
 from cpu import number
 
 class FunctionResult:
-    def __init__(self, id:int, name: str, value:number, function:str) -> None:
+    def __init__(self, id:int, rob_dest: str, value:number, function:str) -> None:
         self.id = id
-        self.name = name
+        self.rob_dest = rob_dest
         self.value = value
         self.function = function
-    
-    def name(self) -> str:
-        return self.name
-    def value(self) -> str:
-        return self.value
 
 
 INT_ADDER_NAME = "addi"
@@ -26,8 +21,8 @@ class CentralDataBus:
         self.__current_value = None
         self.__fu_buffs :dict[str, list[FunctionResult]] = {INT_ADDER_NAME:[], DEC_ADDER_NAME:[], DEC_MULTR_NAME:[]}
 
-    def write(self, id:int, name: str, value:number, function:str) -> None:
-        result = FunctionResult(id, name, value, function)
+    def write(self, id:int, rob_dest: str, value:number, function:str) -> None:
+        result = FunctionResult(id, rob_dest, value, function)
         if self.__current_value == None:
             self.__current_value = result
             return

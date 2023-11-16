@@ -26,15 +26,14 @@ class Entry:
         self.busy = False
         self.op = ""
         self.rob = ""
-        self.val1 = 0
-        self.val2 = 0
+        self.val1 = None
+        self.val2 = None
         self.dep1 = ""
         self.dep2 = ""
         self.result = None
 
     def __init__(self) -> None:
         self.flush()
-
 
     def update(self, 
                busy:int = None,
@@ -58,9 +57,10 @@ class ReservationStation(CDBConsumer):
     """Reservation Station holds a list of `Entry`'s.
     \nCDB consumer.
     """
-    def __init__(self, cdb: CentralDataBus, len=5,) -> None:
+    def __init__(self, cdb: CentralDataBus, funit, len=3) -> None:
         super().__init__(cdb)
         self.entries = [Entry() for _ in range(len)]
+        self.fu = funit # TODO
 
     def entry_is_free(self) -> bool:
         for entry in self.entries:
@@ -68,10 +68,25 @@ class ReservationStation(CDBConsumer):
                 return True
         return False
     
-    def add_instruction(self, instr: IssuedInstruction) -> bool:
+    def add_instruction(self, i: IssuedInstruction) -> bool:
         for entry in self.entries:
-            if entry.busy == 0:
-                entry.new(instr)
+            if entry.busy == False:
+                entry.update(
+                    busy=True,
+                    op = i.op,
+                    rob=i.assigned_dest,
+                    val1=i.val_left,
+                    val2=i.val_right,
+                    dep1=i.dep_left,
+                    dep2=i.dep_right)
+                
+                self.wait_for_variable(i.assigned_dest)
                 return True
         return False
+    
+    def read_cdb(self):
+        pass # TODO
+
+    def try_execute(self):
+        pass # TODO
     

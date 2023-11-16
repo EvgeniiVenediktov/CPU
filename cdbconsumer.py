@@ -6,7 +6,6 @@ class CDBConsumer:
         CDB Consumer is a superclass.
         It's heirs are able to listen to CDB (Central Data Bus) 
         and check for the variables values they await at the moment.
-
     """
     def __init__(self, cdb: CentralDataBus) -> None:
         self.cdb = cdb

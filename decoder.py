@@ -1,8 +1,8 @@
 class Instruction:
     def __init__(self, optype, operands, id) -> None:
-        self.inst_type = optype
-        self.operands = operands
-        self.id = id
+        self.inst_type:str = optype
+        self.operands:list = operands
+        self.id:int = id
     
     def __str__(self) -> str:
         return str(vars(self))
