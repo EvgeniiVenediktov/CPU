@@ -2,8 +2,13 @@
 from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
 from reordering import IssuedInstruction
+from cpu import number
 
-type number = int | float
+
+INT_ADDER_RS_TYPE = "int_adder"
+DEC_ADDER_RS_TYPE = "dec_adder"
+DEC_MULTP_RS_TYPE = "dec_multp"
+LD_STORE_RS_TYPE = "ld_st_rs_type"
 
 class Entry:
     """```
@@ -18,7 +23,7 @@ class Entry:
     ```
     """
     def flush(self) -> None:
-        self.busy = 0
+        self.busy = False
         self.op = ""
         self.rob = ""
         self.val1 = 0
@@ -29,10 +34,6 @@ class Entry:
 
     def __init__(self) -> None:
         self.flush()
-
-    def new(self, instr: IssuedInstruction) -> None: 
-              
-        self.update(busy=1, op=instr.inst_type, )
 
 
     def update(self, 
@@ -60,6 +61,12 @@ class ReservationStation(CDBConsumer):
     def __init__(self, cdb: CentralDataBus, len=5,) -> None:
         super().__init__(cdb)
         self.entries = [Entry() for _ in range(len)]
+
+    def entry_is_free(self) -> bool:
+        for entry in self.entries:
+            if not entry.busy:
+                return True
+        return False
     
     def add_instruction(self, instr: IssuedInstruction) -> bool:
         for entry in self.entries:

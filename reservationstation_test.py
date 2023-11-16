@@ -22,8 +22,8 @@ class TestRS(unittest.TestCase):
         # Arrange
         e_int = Entry()
         e_float = Entry()
-        attrs_int = {'busy':1,'op':"addi", 'rob':"F1", 'val1':int(2),'val2':int(3), 'dep1':"",'dep2':"",'result':None}
-        attrs_float = {'busy':1,'op':"addd", 'rob':"F2", 'val1':float(2),'val2':float(3), 'dep1':"",'dep2':"",'result':None}
+        attrs_int = {'busy':True,'op':"addi", 'rob':"F1", 'val1':int(2),'val2':int(3), 'dep1':"",'dep2':"",'result':None}
+        attrs_float = {'busy':True,'op':"addd", 'rob':"F2", 'val1':float(2),'val2':float(3), 'dep1':"",'dep2':"",'result':None}
         # Action
         e_int.update(busy=1,op="addi",rob="F1",val1=2,val2=3)
         e_float.update(busy=1,op="addd",rob="F2",val1=2.0,val2=3.0)

@@ -1,5 +1,6 @@
-from reservationstation import number
 # CDB - Central Data Bus module
+from cpu import number
+
 class FunctionResult:
     def __init__(self, id:int, name: str, value:number, function:str) -> None:
         self.id = id

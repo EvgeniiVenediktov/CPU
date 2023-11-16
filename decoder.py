@@ -15,7 +15,7 @@ class Decoder:
         self.arguments = []
         self.instances = []
 
-    def run(self):
+    def run(self) -> list[Instruction]:
         k = 0
         with open (self.filename, "r") as f:
             for line in f:
@@ -40,7 +40,7 @@ class InstBuff:
         deck = Decoder(self.filename)
         self.buffer = deck.run()
         
-    def issue(self, i=None):
+    def issue(self, i=None) -> Instruction:
         if self.index >= len(self.buffer) :
             return None
 
