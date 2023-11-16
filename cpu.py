@@ -117,7 +117,6 @@ for cycle in range(NUM_OF_CYCLES):
     """
 
     ### ISSUE Stage
-    
     #1. Read inst from inst buffer
     instr = instruction_buffer.issue()
     rs_type = ""
@@ -154,5 +153,5 @@ for cycle in range(NUM_OF_CYCLES):
     pass 
 
 ### Create Output TimeTable: ###
-# TODO
+monitor.output()
 
