@@ -4,7 +4,8 @@ from decoder import InstBuff
 from cdb import CentralDataBus
 from reservationstation import ReservationStation
 from reservationstation import INT_ADDER_RS_TYPE, DEC_ADDER_RS_TYPE, DEC_MULTP_RS_TYPE, LD_STORE_RS_TYPE
-
+from output import Monitor
+from reordering import ReorderBuffer
 
 type number = int | float
 
@@ -13,6 +14,7 @@ PROGRAM_FILENAME = ""
 ### Create instances of all modules: ###
 
 # Monitor - TODO - 🛠️ in progress
+monitor = Monitor()
 
 # Input Module
 ## Input Decoder - DONE ✔️
@@ -28,6 +30,8 @@ cdb = CentralDataBus()
 
 # Reorder Module:
 ## Reorder Buffer - TODO
+ROB_LEN = 10
+rob = ReorderBuffer(cdb, len=ROB_LEN)
 
 # Branch predictor - TODO - in the next iteration
 
@@ -136,9 +140,10 @@ for cycle in range(NUM_OF_CYCLES):
     matching_rs = res_stations[rs_type]
     if not matching_rs.entry_is_free():
         continue
-    
-    """ Check if resources available - ROB entry
-        or
+    #2.1. Check if resources available - ROB entry
+    if not rob.entry_is_free():
+        continue
+    """
     3. Read operands:
         3.1. Read RAT - get RegisterNum or RS_entry
         3.2. Read (available) sources: if RegNum - Take RegValue, if RS_entry - set dependency to it
