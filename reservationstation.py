@@ -1,7 +1,7 @@
 # RS 
 from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
-from reordering import RenamedInstruction
+from reordering import IssuedInstruction
 
 type number = int | float
 
@@ -30,7 +30,7 @@ class Entry:
     def __init__(self) -> None:
         self.flush()
 
-    def new(self, instr: RenamedInstruction) -> None: 
+    def new(self, instr: IssuedInstruction) -> None: 
               
         self.update(busy=1, op=instr.inst_type, )
 
@@ -61,7 +61,7 @@ class ReservationStation(CDBConsumer):
         super().__init__(cdb)
         self.entries = [Entry() for _ in range(len)]
     
-    def add_instruction(self, instr: RenamedInstruction) -> bool:
+    def add_instruction(self, instr: IssuedInstruction) -> bool:
         for entry in self.entries:
             if entry.busy == 0:
                 entry.new(instr)

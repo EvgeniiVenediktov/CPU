@@ -1,5 +1,5 @@
 # CDB Consumer super-class
-from cdb import CentralDataBus, NameAndValue
+from cdb import CentralDataBus, FunctionResult
 
 class CDBConsumer:
     """
@@ -10,21 +10,20 @@ class CDBConsumer:
     """
     def __init__(self, cdb: CentralDataBus) -> None:
         self.cdb = cdb
-        self.variables_to_get = []
+        self.variables_to_get:list[str] = []
     
-    def wait_for_variable(self, var_name) -> None:
+    def wait_for_variable(self, var_name:str) -> None:
         if var_name not in self.variables_to_get:
             self.variables_to_get.append(var_name)
     
-    def fetch_from_cdb(self) -> list[NameAndValue]:
-        contents = self.cdb.read()
-        results = []
-        for elem in contents:
-            name, _ = elem.unpack()
-            if name in self.variables_to_get:
-                results.append(elem)
-
-        return results
+    def fetch_from_cdb(self) -> FunctionResult:
+        current_value = self.cdb.read()
+        for i in range(len(self.variables_to_get)):
+            vname = self.variables_to_get[i]
+            if vname == current_value:
+                del self.variables_to_get[i]
+                return current_value
+        return None
     
 
 

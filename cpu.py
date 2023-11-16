@@ -54,6 +54,8 @@ for cycle in range(NUM_OF_CYCLES):
         - LD/SD buffer
     2. If written anything:
         - Monitor.mark_wb(ID, i)
+    3. Clear current values
+    4. Write a value from buffer to current
     """
 
     ### MEMORY Stage
