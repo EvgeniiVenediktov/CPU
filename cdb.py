@@ -18,26 +18,26 @@ class CentralDataBus:
     """ Central Data Bus holds current ready values
     """
     def __init__(self) -> None:
-        self.__current_value = None
-        self.__fu_buffs :dict[str, list[FunctionResult]] = {INT_ADDER_NAME:[], DEC_ADDER_NAME:[], DEC_MULTR_NAME:[]}
+        self.current_value = None
+        self.fu_buffs :dict[str, list[FunctionResult]] = {INT_ADDER_NAME:[], DEC_ADDER_NAME:[], DEC_MULTR_NAME:[]}
 
     def write(self, result:FunctionResult) -> None:
-        if self.__current_value == None:
-            self.__current_value = result
+        if self.current_value == None:
+            self.current_value = result
             return
-        self.__fu_buffs[function].append(result)
-        self.__fu_buffs[function] = sorted(self.__fu_buffs[function], key=lambda r: r.id)
+        self.fu_buffs[function].append(result)
+        self.fu_buffs[function] = sorted(self.fu_buffs[function], key=lambda r: r.id)
 
     def read(self) -> FunctionResult:
-        return self.__current_value
+        return self.current_value
 
     def flush_current_bump_buffered(self) -> None:
         # Select new current value
         new_current = None
         lowest = 999999999999999
         function = ""
-        for func in self.__fu_buffs:
-            q = self.__fu_buffs[func]
+        for func in self.fu_buffs:
+            q = self.fu_buffs[func]
             if len(q) == 0:
                 continue
             # CDB Arbiter
@@ -47,7 +47,7 @@ class CentralDataBus:
                 new_current = result
                 function = func
         # Remove selected
-        del self.__fu_buffs[function][0]
+        del self.fu_buffs[function][0]
 
         # Record new current
-        self.__current_value = new_current
+        self.current_value = new_current

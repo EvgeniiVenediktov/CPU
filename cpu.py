@@ -8,7 +8,7 @@ from output import Monitor
 from reordering import ReorderBuffer
 from registers import ArchitectedRegisterFile, RegistersAliasTable
 from funit import FunctionalUnit
-from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY
+from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY_LOAD
 from utils import number
 
 PROGRAM_FILENAME = ""
@@ -47,7 +47,7 @@ rob = ReorderBuffer(cdb, len=ROB_LEN)
 adder_int = FunctionalUnit(TYPE_INT_ADDER, cdb)
 adder_dec = FunctionalUnit(TYPE_DEC_ADDER, cdb)
 multr_dec = FunctionalUnit(TYPE_DEC_MULTP, cdb)
-memory_fu = FunctionalUnit(TYPE_MEMORY, cdb)
+memory_fu = FunctionalUnit(TYPE_MEMORY_LOAD, cdb)
 
 func_units = [adder_int, adder_dec, multr_dec, memory_fu]
 
@@ -66,8 +66,9 @@ res_stations = {
 ## Address Resolver - TODO
 ## Load/Store Buffers - TODO - 🛠️ in progress
 ## Memory - TODO
+MEM_SIZE = 256
 mem_init_file = ""
-hard_memory = Memory(mem_init_file)
+hard_memory = Memory(mem_init_file, MEM_SIZE)
 
 
 def issue_ld_sd_instruction(instr):
