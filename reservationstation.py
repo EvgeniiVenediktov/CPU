@@ -106,14 +106,17 @@ class ReservationStation(CDBConsumer):
                 entry.flush()
         return result.id
 
-    def try_execute(self) -> None:
+    def try_execute(self) -> None|int:
         if not self.funit.is_free():
-            return
+            return None
         
         # Choose an instruction to execute
 
         #self.entries = sorted(self.entries, key=lambda e: e.id)
         for e in self.entries:
             if e.val1 != None and e.val2 != None:
-                self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
+                is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
+                if is_issued:
+                    return e.id
+        return None
 

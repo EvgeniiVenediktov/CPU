@@ -47,19 +47,20 @@ class FunctionalUnit:
     def is_free(self) -> bool:
         return self.busy
     
-    def produce_result(self) -> None:
+    def produce_result(self) -> None|int:
         if not self.busy:
-            return
+            return None
         if self.current_counter == 0:
             self.ready == True
         if self.ready:
             self.cdb.write(self.result)#TODO
             self.busy = False
             self.ready = False
-            return 
+            return self.result.id
         self.current_counter -= 1
+        return None
 
-    def execute(self, id:int, rob:str, op:str, v1:number, v2:number) -> None:
+    def execute(self, id:int, rob:str, op:str, v1:number, v2:number) -> bool:
         func = OP_FUNC_MAPPING[op]
         self.current_counter = self.latency
         self.buse = True
@@ -67,4 +68,5 @@ class FunctionalUnit:
         value = func(v1, v2)
 
         self.result = FunctionResult(id, rob, value, op)
+        return True
 

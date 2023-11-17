@@ -7,6 +7,8 @@ from reservationstation import INT_ADDER_RS_TYPE, DEC_ADDER_RS_TYPE, DEC_MULTP_R
 from output import Monitor
 from reordering import ReorderBuffer
 from registers import ArchitectedRegisterFile, RegistersAliasTable
+from funit import FunctionalUnit
+from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY
 from utils import number
 
 PROGRAM_FILENAME = ""
@@ -42,15 +44,22 @@ rob = ReorderBuffer(cdb, len=ROB_LEN)
 ## Functional Module Buffers (Int buffer, Float buffer) - DONE ✔️ - store values here if CDB is ocuppied
 ## Reservation Stations - DONE ✔️
 
+adder_int = FunctionalUnit(TYPE_INT_ADDER, cdb)
+adder_dec = FunctionalUnit(TYPE_DEC_ADDER, cdb)
+multr_dec = FunctionalUnit(TYPE_DEC_MULTP, cdb)
+memory_fu = FunctionalUnit(TYPE_MEMORY, cdb)
+
+func_units = [adder_int, adder_dec, multr_dec, memory_fu]
+
 INT_ADDER_RS_LEN = 2
 DEC_ADDER_RS_LEN = 3
 DEC_MULTP_RS_LEN = 2
 LD_STORE_RS_LEN = 3
 res_stations = {
-    INT_ADDER_RS_TYPE:ReservationStation(cdb=cdb, len=INT_ADDER_RS_LEN),
-    DEC_ADDER_RS_TYPE:ReservationStation(cdb=cdb, len=DEC_ADDER_RS_LEN),
-    DEC_MULTP_RS_TYPE:ReservationStation(cdb=cdb, len=DEC_MULTP_RS_LEN),
-    LD_STORE_RS_TYPE:ReservationStation(cdb=cdb, len=LD_STORE_RS_LEN)
+    INT_ADDER_RS_TYPE:ReservationStation(cdb=cdb, funit=adder_int, len=INT_ADDER_RS_LEN),
+    DEC_ADDER_RS_TYPE:ReservationStation(cdb=cdb,funit=adder_dec, len=DEC_ADDER_RS_LEN),
+    DEC_MULTP_RS_TYPE:ReservationStation(cdb=cdb,funit=multr_dec, len=DEC_MULTP_RS_LEN),
+    LD_STORE_RS_TYPE:ReservationStation(cdb=cdb,funit=memory_fu, len=LD_STORE_RS_LEN)
 }
 
 # Memory Module
@@ -127,6 +136,18 @@ for cycle in range(NUM_OF_CYCLES):
             2.1. Set busy_counter = specific num of CC
             2.2. Monitor.mark_execution(ID, i)
     """
+    #1. Try producing result to CDB from each FunctionalUnit:
+    for fu in func_units:
+        id = fu.produce_result()
+        if id != None:
+            monitor.mark_ex_end(id, cycle)
+        
+
+    #2. Try starting execution from each of RS:
+    for rs_type in res_stations:
+        id = res_stations[rs_type].try_execute()
+        if id != None:
+            monitor.mark_ex_start(id, cycle)
 
     ### ISSUE Stage
     #1. Read inst from inst buffer
