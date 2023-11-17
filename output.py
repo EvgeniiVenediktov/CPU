@@ -58,7 +58,7 @@ class MonitoredInstruction():
         self.commit = 0
     
     def __str__(self) -> str:
-        strIns = f'{self.id} | {self.issue} |{self.ex_start}-{self.ex_end}|{self.mem} |{self.wb} |{self.commit}'
+        strIns = f'{self.id} | {self.issue} |{self.ex_start}-{self.ex_end}|{self.mem_start} |{self.mem_end} |{self.wb} |{self.commit}'
         return(strIns)
 
 
@@ -66,24 +66,24 @@ if __name__ == "__main__":
     
     monit = Monitor()
     monit.mark_issue(0,1)
-    monit.mark_ex_start(0,10-5)
+    monit.mark_ex_start(0,10)
     monit.mark_ex_end(0,10)
     monit.mark_mem_start(0,11)
     monit.mark_mem_end(0,14)
     monit.mark_wb(0,12)
     monit.mark_commit(0,22)
     monit.mark_issue(1,20)
-    monit.mark_ex_start(1,21-5)
+    monit.mark_ex_start(1,21)
     monit.mark_ex_end(1,21)
     monit.mark_mem_start(1,22)
     monit.mark_mem_end(1,24)
     monit.mark_wb(1,32)
     monit.mark_commit(1,34)
     monit.mark_issue(2,30)
-    monit.mark_ex_start(2,31-5)
+    monit.mark_ex_start(2,31)
     monit.mark_ex_end(2,31)
     monit.mark_mem_start(2,32)
-    monit.mark_mem_end(2,33)
+    monit.mark_mem_end(2,34)
     monit.mark_issue(3,59)
     monit.mark_wb(3,99)
     monit.mark_wb(2,98)
