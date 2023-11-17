@@ -28,6 +28,7 @@ class Entry:
         self.dest:str = ""
         self.value:number = None
         self.is_ready:bool = False
+        self.in_progress:bool = False
         pass # TODO
     def __str__(self) -> str:
         return str(vars(self))
@@ -122,7 +123,13 @@ class ReorderBuffer(CDBConsumer):
                 entry.value = result.value
                 return entry.id
         return None
+    
+    def show_head_entry_type(self) -> str:
+        return self.entries[self.head].type
             
+    def show_head_entry(self) -> Entry:
+        return self.entries[self.head]
+
     def commit(self) -> int|None:
         """ Returns committed id or None
         1. Write value to ARF

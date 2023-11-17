@@ -2,13 +2,13 @@
 from memory import Memory
 from decoder import InstBuff
 from cdb import CentralDataBus
-from reservationstation import ReservationStation
+from reservationstation import ReservationStation, LoadBuffer, StoreBuffer
 from reservationstation import INT_ADDER_RS_TYPE, DEC_ADDER_RS_TYPE, DEC_MULTP_RS_TYPE, LOAD_RS_TYPE, STORE_RS_TYPE
 from output import Monitor
 from reordering import ReorderBuffer
 from registers import ArchitectedRegisterFile, RegistersAliasTable
-from funit import FunctionalUnit, AddressResolver
-from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY_LOAD
+from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, MemoryStoreFunctionalUnit
+from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY_LOAD, TYPE_MEMORY_STORE
 from utils import number
 
 PROGRAM_FILENAME = ""
@@ -47,25 +47,28 @@ rob = ReorderBuffer(cdb, len=ROB_LEN)
 adder_int = FunctionalUnit(TYPE_INT_ADDER, cdb)
 adder_dec = FunctionalUnit(TYPE_DEC_ADDER, cdb)
 multr_dec = FunctionalUnit(TYPE_DEC_MULTP, cdb)
-memory_fu = FunctionalUnit(TYPE_MEMORY_LOAD, cdb)
+memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb)
+memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb)
 
-func_units = [adder_int, adder_dec, multr_dec, memory_fu]
+func_units = [adder_int, adder_dec, multr_dec]
 
 INT_ADDER_RS_LEN = 2
 DEC_ADDER_RS_LEN = 3
 DEC_MULTP_RS_LEN = 2
-LD_STORE_RS_LEN = 3
+
 res_stations = {
     INT_ADDER_RS_TYPE:ReservationStation(cdb=cdb, funit=adder_int, len=INT_ADDER_RS_LEN),
     DEC_ADDER_RS_TYPE:ReservationStation(cdb=cdb,funit=adder_dec, len=DEC_ADDER_RS_LEN),
     DEC_MULTP_RS_TYPE:ReservationStation(cdb=cdb,funit=multr_dec, len=DEC_MULTP_RS_LEN),
-    LOAD_RS_TYPE:ReservationStation(cdb=cdb,funit=memory_fu, len=LD_STORE_RS_LEN)
 }
 
 # Memory Module
 ## Address Resolver - TODO
 address_resolver = AddressResolver()
 ## Load/Store Buffers - TODO - 🛠️ in progress
+LD_SD_BUF_LEN = 3
+load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
+store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
 ## Memory - TODO
 MEM_SIZE = 256
 mem_init_file = ""
@@ -122,6 +125,17 @@ for cycle in range(NUM_OF_CYCLES):
     2. Start loading/storing from the LD/SD buffer
     3. Set mem_busy_counter = specific num of CC
     """
+    #1. If rob.head - Store instruction, start executing it
+    rob_head = rob.show_head_entry()
+    if rob_head.type == "SD":
+        sd_buf_head = store_buffer.show_head()
+        if not rob_head.in_progress and sd_buf_head != None:
+            if rob_head.id == sd_buf_head.id:
+                id = store_buffer.try_execute()
+                if id != None:
+                    monitor.mark_mem(id, cycle)
+                    rob_head.in_progress = True
+
 
     ### EXECUTION Stage
     """ FU - functional unit

@@ -98,7 +98,7 @@ class ReservationStation(CDBConsumer):
                 return True
         return False
     
-    def read_cdb(self) -> int|None:
+    def read_cdb(self) -> int|None: # TODO TEST
         result = self.fetch_from_cdb()
         if result == None:
             return None
@@ -133,7 +133,6 @@ class LoadBuffer(ReservationStation):
     def __init__(self, cdb: CentralDataBus, funit: FunctionalUnit, len=3) -> None:
         super().__init__(cdb, funit, len)
         self.address_resolver = AddressResolver()
-        # TODO
     
     def try_execute(self) -> None|int:
         if not self.funit.is_free():
@@ -154,3 +153,21 @@ class StoreBuffer(ReservationStation):
     def __init__(self, cdb: CentralDataBus, funit: FunctionalUnit, len=3) -> None:
         super().__init__(cdb, funit, len)
         # TODO
+
+    def show_head(self) -> Entry|None:
+        if len(self.entries) == 0:
+            return None
+        return self.entries[0]
+
+    def try_execute(self) -> None|int:
+        if not self.funit.is_free():
+            return None
+        if len(self.entries) == 0:
+            return None
+        e = self.entries[0]
+        if e.val1 != None and not e.in_progress:
+            is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1+e.offset, e.val2)
+            if is_issued:
+                e.in_progress = True
+                return e.id
+        return None

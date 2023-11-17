@@ -8,6 +8,7 @@ TYPE_INT_ADDER = 'INT_ADDER'
 TYPE_DEC_ADDER = 'DEC_ADDER'
 TYPE_DEC_MULTP = 'DEC_MULTP'
 TYPE_MEMORY_LOAD = 'MEMORY_LOADER'
+TYPE_MEMORY_STORE = 'MEMORY_STORER'
 
 LATENCIES = {
     TYPE_INT_ADDER: 1,
@@ -130,6 +131,9 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
 
         return True
     
+class MemoryStoreFunctionalUnit(FunctionalUnit):
+    def __init__(self, unit_type: str, cdb: CentralDataBus) -> None:
+        super().__init__(unit_type, cdb)# TODO
 
 class AddressResolver:
     """Handles address resolving for LD, SD"""
