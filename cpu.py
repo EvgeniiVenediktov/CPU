@@ -8,10 +8,10 @@ from output import Monitor
 from reordering import ReorderBuffer
 from registers import ArchitectedRegisterFile, RegistersAliasTable
 from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, MemoryStoreFunctionalUnit
-from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY_LOAD, TYPE_MEMORY_STORE
+from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
-PROGRAM_FILENAME = ""
+PROGRAM_FILENAME = "TestFile.txt"
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -21,6 +21,7 @@ monitor = Monitor()
 ## Input Decoder - DONE ✔️
 ## Instruction Buffer - DONE ✔️
 instruction_buffer = InstBuff(PROGRAM_FILENAME)
+instruction_buffer.refill()
 
 # CDB - DONE ✔️
 cdb = CentralDataBus()
@@ -28,14 +29,14 @@ cdb = CentralDataBus()
 # Register Module:
 ## Register Alias Table - DONE ✔️
 ## Architected Register File - DONE ✔️
-REG_LEN = 7
+REG_LEN = 32
 arf = ArchitectedRegisterFile(REG_LEN)
 rat = RegistersAliasTable(arf, REG_LEN)
 
 # Reorder Module:
 ## Reorder Buffer - DONE ✔️
 ROB_LEN = 10
-rob = ReorderBuffer(cdb, len=ROB_LEN)
+rob = ReorderBuffer(cdb, rat, len=ROB_LEN)
 
 # Branch predictor - TODO - in the next iteration
 
@@ -47,8 +48,14 @@ rob = ReorderBuffer(cdb, len=ROB_LEN)
 adder_int = FunctionalUnit(TYPE_INT_ADDER, cdb)
 adder_dec = FunctionalUnit(TYPE_DEC_ADDER, cdb)
 multr_dec = FunctionalUnit(TYPE_DEC_MULTP, cdb)
-memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb)
-memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb)
+
+## Memory - DONE ✔️
+MEM_SIZE = 256
+mem_init_file = ""
+hard_memory = Memory(mem_init_file, MEM_SIZE)
+
+memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory)
+memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory)
 
 func_units = [adder_int, adder_dec, multr_dec]
 
@@ -63,25 +70,18 @@ res_stations = {
 }
 
 # Memory Module
-## Address Resolver - TODO
+## Address Resolver - DONE ✔️
 address_resolver = AddressResolver()
-## Load/Store Buffers - TODO - 🛠️ in progress
+## Load/Store Buffers - DONE ✔️
 LD_SD_BUF_LEN = 3
 load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
-## Memory - TODO
-MEM_SIZE = 256
-mem_init_file = ""
-hard_memory = Memory(mem_init_file, MEM_SIZE)
 
 
-def issue_ld_sd_instruction(instr):
-    # TODO
-    pass
 
 ### Run for N clock cycles: ###
-NUM_OF_CYCLES = 1000
-for cycle in range(NUM_OF_CYCLES):
+NUM_OF_CYCLES = 15
+for cycle in range(1,NUM_OF_CYCLES):
     ### COMMIT Stage
     """
     Commit a ready instruction from ROB:
@@ -104,7 +104,8 @@ for cycle in range(NUM_OF_CYCLES):
     for rs_name in res_stations:
         written_value_id = res_stations[rs_name].read_cdb()
 
-    # TODO written_value_id = LD/SD.read_cdb()
+    written_value_id = load_buffer.read_cdb()
+    written_value_id = store_buffer.read_cdb()
 
     #2. If written anything - Monitor.mark_wb(ID, i)
     if written_value_id != None:
@@ -180,10 +181,11 @@ for cycle in range(NUM_OF_CYCLES):
     resolved_instruction = address_resolver.produce_address()
     if resolved_instruction != None:
         rs = None
-        if resolved_instruction.op == "LD":
-            rs = res_stations[LOAD_RS_TYPE]
-        if resolved_instruction.op == "SD":
-            rs = res_stations[STORE_RS_TYPE]    
+        if resolved_instruction.inst_type == "LD":
+            rs = load_buffer
+        if resolved_instruction.inst_type == "SD":
+            rs = store_buffer
+        monitor.mark_ex_start(resolved_instruction.id, cycle)
         monitor.mark_ex_end(resolved_instruction.id, cycle)
 
         if rob.entry_is_free() and rs.entry_is_free():
@@ -193,7 +195,8 @@ for cycle in range(NUM_OF_CYCLES):
             success = rs.add_instruction(issued_instr)
             if not success:
                 raise Exception("failed to add instuction to a RS", str(issued_instr), str(rs))
-        
+            address_resolver.address_was_processed()
+
 
     ### ISSUE Stage
     #1. Read inst from inst buffer
@@ -203,20 +206,22 @@ for cycle in range(NUM_OF_CYCLES):
         continue
     rs_type = ""
     t = instr.inst_type
-    if t == "LD" or "SD":
+    if t == "LD" or t == "SD":
         #rs_type = LOAD_RS_TYPE
         operand_replacement = rat.get_value_or_alias(instr.operands[1])
         instr.operands[1] = operand_replacement
         #try sending it to Address Resolver
         ar_id = address_resolver.resolve_address(instr)
+
         if ar_id == None:
             instruction_buffer.return_to_prev_index()
             continue
-        monitor.mark_ex_start(ar_id, cycle)
+        monitor.mark_issue(ar_id, cycle)
+        
         continue
-    elif t == "Addi" or "Sub":
+    elif t == "Add" or t == "Addi" or t == "Sub":
         rs_type = INT_ADDER_RS_TYPE
-    elif t == "Add.d" or "Sub.d":
+    elif t == "Add.d" or t == "Sub.d":
         rs_type = DEC_ADDER_RS_TYPE
     elif t == "Mult.d":
         rs_type = DEC_MULTP_RS_TYPE
@@ -249,6 +254,11 @@ for cycle in range(NUM_OF_CYCLES):
     #5. Monitor.mark_issue(ID, i)
     monitor.mark_issue(instr.id, cycle)
 
+    # Release all FUs
+    for fu in func_units:
+        fu.release_at_the_end_of_cycle()
+    memory_loader_fu.release_at_the_end_of_cycle()
+    memory_storer_fu.release_at_the_end_of_cycle()
     pass 
 
 ### Create Output TimeTable: ###

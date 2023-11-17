@@ -3,18 +3,14 @@ from cdb import CentralDataBus, FunctionResult
 from memory import Memory as HardMemory
 from utils import number, IssuedInstruction
 from decoder import Instruction as DecodedInstruction
-
-TYPE_INT_ADDER = 'INT_ADDER'
-TYPE_DEC_ADDER = 'DEC_ADDER'
-TYPE_DEC_MULTP = 'DEC_MULTP'
-TYPE_MEMORY_LOAD = 'MEMORY_LOADER'
-TYPE_MEMORY_STORE = 'MEMORY_STORER'
+from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 
 LATENCIES = {
     TYPE_INT_ADDER: 1,
     TYPE_DEC_ADDER: 3,
     TYPE_DEC_MULTP: 20,
     TYPE_MEMORY_LOAD: 4,
+    TYPE_MEMORY_STORE: 4,
 }
 
 def subi(v1, v2):
@@ -54,17 +50,20 @@ class FunctionalUnit:
         self.ready:bool = False
         self.current_counter:int = 0
 
+        self.used_at_this_cycle = False
+
     def is_free(self) -> bool:
         return not self.busy
     
     def produce_result(self) -> None|int:
         if not self.busy:
             return None
+        self.current_counter -= 1
         if self.current_counter == 0:
             self.ready = True
         if self.ready:
             val = self.func(self.v1, self.v2)
-            result = FunctionResult(self.id, self.rob, val, self.op)
+            result = FunctionResult(self.id, self.rob, val, self.op, self.unit_type)
             self.cdb.write(result)
             self.busy = False
             self.ready = False
@@ -76,12 +75,14 @@ class FunctionalUnit:
             self.v2 = None
             self.op = None
 
+            self.used_at_this_cycle = True
+
             return result.id
-        self.current_counter -= 1
+
         return None
 
     def execute(self, id:int, rob:str, op:str, v1:number, v2:number) -> bool:
-        if self.busy:
+        if self.busy or self.used_at_this_cycle:
             return False
         
         if op not in OP_FUNC_MAPPING:
@@ -100,6 +101,9 @@ class FunctionalUnit:
         self.func = func
 
         return True
+    
+    def release_at_the_end_of_cycle(self):
+        self.used_at_this_cycle = False
 
 
 class MemoryLoadFunctionalUnit(FunctionalUnit):
@@ -108,7 +112,7 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
         self.mem = mem
 
     def execute(self, id: int, rob: str, op: str, v1: number, v2: number) -> bool:
-        if self.busy:
+        if self.busy or self.used_at_this_cycle:
             return False
         
         if op not in OP_FUNC_MAPPING and op != "LD":
@@ -132,8 +136,32 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
         return True
     
 class MemoryStoreFunctionalUnit(FunctionalUnit):
-    def __init__(self, unit_type: str, cdb: CentralDataBus) -> None:
-        super().__init__(unit_type, cdb)# TODO
+    def __init__(self, unit_type: str, cdb: CentralDataBus, mem: HardMemory) -> None:
+        super().__init__(unit_type, cdb)
+        self.mem = mem
+
+    def execute(self, id: int, rob: str, op: str, v1: number, v2: number) -> bool:
+        if self.busy or self.used_at_this_cycle:
+            return False
+        
+        if op not in OP_FUNC_MAPPING and op != "SD":
+            raise Exception("Not supported instruction:", op, "FuncUnit:",self.unit_type)
+        
+        func = self.mem.store
+        
+        self.current_counter = self.latency-1
+        self.busy = True
+        self.ready = False
+
+        self.id = id
+        self.rob = rob
+        self.v1 = v1
+        self.v2 = v2
+        self.op = op
+        self.func = func
+
+        return True
+    
 
 class AddressResolver:
     """Handles address resolving for LD, SD"""
