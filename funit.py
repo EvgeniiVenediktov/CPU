@@ -53,7 +53,7 @@ class FunctionalUnit:
         self.used_at_this_cycle = False
 
     def is_free(self) -> bool:
-        return not self.busy
+        return not self.busy and not self.used_at_this_cycle
     
     def produce_result(self) -> None|int:
         if not self.busy:

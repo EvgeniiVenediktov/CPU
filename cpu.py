@@ -78,9 +78,20 @@ load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
 
 
+def end_cycle():
+    for fu in func_units:
+        fu.release_at_the_end_of_cycle()
+    memory_loader_fu.release_at_the_end_of_cycle()
+    memory_storer_fu.release_at_the_end_of_cycle()
+
+    for rs_type in res_stations:
+        rs = res_stations[rs_type]
+        rs.end_cycle()
+    load_buffer.end_cycle()
+    store_buffer.end_cycle()
 
 ### Run for N clock cycles: ###
-NUM_OF_CYCLES = 15
+NUM_OF_CYCLES = 30
 for cycle in range(1,NUM_OF_CYCLES):
     ### COMMIT Stage
     """
@@ -101,15 +112,22 @@ for cycle in range(1,NUM_OF_CYCLES):
     #1. Check CDB and update values by all consumers:
     written_value_id = None
     written_value_id = rob.read_cdb()
-    for rs_name in res_stations:
-        written_value_id = res_stations[rs_name].read_cdb()
-
-    written_value_id = load_buffer.read_cdb()
-    written_value_id = store_buffer.read_cdb()
-
-    #2. If written anything - Monitor.mark_wb(ID, i)
     if written_value_id != None:
         monitor.mark_wb(written_value_id, cycle)
+    for rs_name in res_stations:
+        rs = res_stations[rs_name]
+        written_value_id = rs.read_cdb()
+        if written_value_id != None:
+            monitor.mark_wb(written_value_id, cycle)
+
+    written_value_id = load_buffer.read_cdb()
+    if written_value_id != None:
+        monitor.mark_wb(written_value_id, cycle)
+    written_value_id = store_buffer.read_cdb()
+    if written_value_id != None:
+        monitor.mark_wb(written_value_id, cycle)
+
+    #2. If written anything - Monitor.mark_wb(ID, i)
         
     #3. Clear current CDB value and Write a value from buffer to current
     cdb.flush_current_bump_buffered()
@@ -173,7 +191,8 @@ for cycle in range(1,NUM_OF_CYCLES):
 
     #2. Try starting execution from each of RS:
     for rs_type in res_stations:
-        id = res_stations[rs_type].try_execute()
+        rs = res_stations[rs_type]
+        id = rs.try_execute()
         if id != None:
             monitor.mark_ex_start(id, cycle)
     
@@ -203,6 +222,7 @@ for cycle in range(1,NUM_OF_CYCLES):
     instr = instruction_buffer.issue()
     if instr == None:
         print(f"Nothing issued, cycle {cycle}")
+        end_cycle()
         continue
     rs_type = ""
     t = instr.inst_type
@@ -215,9 +235,10 @@ for cycle in range(1,NUM_OF_CYCLES):
 
         if ar_id == None:
             instruction_buffer.return_to_prev_index()
+            end_cycle()
             continue
         monitor.mark_issue(ar_id, cycle)
-        
+        end_cycle()
         continue
     elif t == "Add" or t == "Addi" or t == "Sub":
         rs_type = INT_ADDER_RS_TYPE
@@ -231,10 +252,12 @@ for cycle in range(1,NUM_OF_CYCLES):
     matching_rs = res_stations[rs_type]
     if not matching_rs.entry_is_free():
         instruction_buffer.return_to_prev_index()
+        end_cycle()
         continue
     #2.1. Check if resources available - ROB entry
     if not rob.entry_is_free():
         instruction_buffer.return_to_prev_index()
+        end_cycle()
         continue
 
     #3. Prepare operands, write to RS, ROB:
@@ -255,10 +278,7 @@ for cycle in range(1,NUM_OF_CYCLES):
     monitor.mark_issue(instr.id, cycle)
 
     # Release all FUs
-    for fu in func_units:
-        fu.release_at_the_end_of_cycle()
-    memory_loader_fu.release_at_the_end_of_cycle()
-    memory_storer_fu.release_at_the_end_of_cycle()
+    end_cycle()
     pass 
 
 ### Create Output TimeTable: ###

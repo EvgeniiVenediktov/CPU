@@ -72,7 +72,7 @@ class ReorderBuffer(CDBConsumer):
                 else:
                     vals[i-1] = op
 
-            for dep in deps:
+            for i, dep in enumerate(deps):
                 if dep == None:
                     continue
                 if self.rat.does_entry_match_name(dep, dep):
@@ -80,7 +80,8 @@ class ReorderBuffer(CDBConsumer):
                 else:
                     if dep[:3] == "ROB":
                         continue
-                    dep = self.rat.get_alias_for_reg(dep)
+                    deps[i] = self.rat.get_alias_for_reg(dep)
+                    pass
 
             issi = IssuedInstruction()
             issi.id = instr.id
@@ -155,5 +156,13 @@ class ReorderBuffer(CDBConsumer):
         self.rat.set_reg_value(entry.dest, entry.value)
         if self.rat.does_entry_match_name(entry.dest, entry.entry_name):
             self.rat.free_alias(entry.dest)
+        self.set_new_head()
         return entry.id
+    
+    def set_new_head(self) -> None:
+        nh = self.head + 1
+        if nh >= len(self.entries):
+            nh = nh % len(self.entries)
+        self.head = nh
+
         

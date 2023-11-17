@@ -44,6 +44,7 @@ class CentralDataBus:
                 new_current = result
                 function = func
         if new_current == None:
+            self.current_value = None
             return 
         # Remove selected
         del self.fu_buffs[function][0]
