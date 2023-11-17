@@ -34,6 +34,7 @@ class Entry:
         self.dep1 = ""
         self.dep2 = ""
         self.result = None
+        self.offset = 0
 
     def __init__(self) -> None:
         self.flush()
@@ -50,9 +51,10 @@ class Entry:
                val2:number = None,
                dep1:str = None,
                dep2:str = None,
-               result:number = None
+               result:number = None,
+               offset:int = None
                ) -> None:
-        args = {'busy':busy,'in_progress':in_progress,'op':op,'id':id,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result}
+        args = {'busy':busy,'in_progress':in_progress,'op':op,'id':id,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result,'offset':offset}
         for arg in args:
             val = args[arg]
             if val == None:
@@ -89,7 +91,8 @@ class ReservationStation(CDBConsumer):
                     val1=i.val_left,
                     val2=i.val_right,
                     dep1=i.dep_left,
-                    dep2=i.dep_right)
+                    dep2=i.dep_right,
+                    offset=i.offset)
                 
                 self.wait_for_variable(i.assigned_dest)
                 return True
@@ -131,6 +134,20 @@ class LoadBuffer(ReservationStation):
         super().__init__(cdb, funit, len)
         self.address_resolver = AddressResolver()
         # TODO
+    
+    def try_execute(self) -> None|int:
+        if not self.funit.is_free():
+            return None
+        
+        # Choose an instruction to execute
+        #self.entries = sorted(self.entries, key=lambda e: e.id)
+        for e in self.entries:
+            if e.val1 != None and not e.in_progress:
+                is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1+e.offset, e.val2)
+                if is_issued:
+                    e.in_progress = True
+                    return e.id
+        return None
 
 
 class StoreBuffer(ReservationStation):

@@ -38,6 +38,8 @@ class RegistersAliasTable:
             self.entries[name] = Entry(name=name, default_value=name) 
     
     def does_entry_match_name(self, orig_name:str, assigned_name:str) -> bool:
+        if orig_name not in self.entries:
+            return False
         if self.entries[orig_name].name == assigned_name:
             return True
         return False
