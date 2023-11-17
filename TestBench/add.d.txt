@@ -1,0 +1,4 @@
+LD F1,F1
+LD F2,F2
+Add.d F3,F2,F1
+Sd F3,F3
