@@ -90,7 +90,19 @@ class ReservationStation(CDBConsumer):
         return False
     
     def read_cdb(self) -> int|None:
-        pass # TODO
+        result = self.fetch_from_cdb()
+        if result == None:
+            return None
+        for entry in self.entries:
+            if entry.dep1 == result.rob_dest:
+                entry.val1 = result.value
+                entry.dep1 = None
+            if entry.dep2 == result.rob_dest:
+                entry.val2 = result.value
+                entry.dep2 = None
+            if entry.rob == result.rob_dest:
+                entry.flush()
+        return result.id
 
     def try_execute(self):
         pass # TODO

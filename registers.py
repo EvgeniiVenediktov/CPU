@@ -45,7 +45,10 @@ class RegistersAliasTable:
 
     def reserve_alias(self, instr:IssuedInstruction) -> None:
         self.entries[instr.original_dest] = instr.assigned_dest
-    
+
+    def get_alias_for_reg(self, name:str) -> str:
+        return self.entries[name]
+
     def free_alias(self, orig_name:str) -> None:
         self.entries[orig_name].reset_value()
     

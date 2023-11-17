@@ -73,6 +73,8 @@ class ReorderBuffer(CDBConsumer):
                     continue
                 if self.rat.does_entry_match_name(dep, dep):
                     dep = self.rat.get_reg_value(dep)
+                else:
+                    dep = self.rat.get_alias_for_reg(dep)
 
             issi = IssuedInstruction()
             issi.id = instr.id

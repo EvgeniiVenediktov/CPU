@@ -15,7 +15,7 @@ class CDBConsumer:
         if var_name not in self.variables_to_get:
             self.variables_to_get.append(var_name)
     
-    def fetch_from_cdb(self) -> FunctionResult:
+    def fetch_from_cdb(self) -> FunctionResult|None:
         current_value = self.cdb.read()
         for i in range(len(self.variables_to_get)):
             vname = self.variables_to_get[i]
