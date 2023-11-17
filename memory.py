@@ -1,6 +1,5 @@
 # Memory Unit
-
-MEM_SIZE = 64
+from utils import number
 
 class Memory:
     """
@@ -17,13 +16,13 @@ class Memory:
         |_________|____________|
         |mem_addr ,   value    |
         |______________________|
-        |   12   ,    144      |
-        |   33   ,    10.5     |
+        |   12    ,    144     |
+        |   33    ,    10.5    |
         |______________________|
     ```
 
 """
-    def __init_from_file(self, init_file_name):
+    def __init_from_file(self, init_file_name:str):
         with open(init_file_name) as f:
             lines = f.readlines()
             for line in lines:
@@ -38,8 +37,8 @@ class Memory:
                 self._mem_array[addr] = value
             f.close()
     
-    def __init__(self, init_file_name=''):
-        self._mem_array = [0 for _ in range(MEM_SIZE)]
+    def __init__(self, init_file_name:str='', mem_size:int=256):
+        self._mem_array = [0 for _ in range(mem_size)]
         if len(init_file_name) != 0:
             self.__init_from_file(init_file_name)
         
@@ -56,11 +55,12 @@ class Memory:
     def get_mem_array(self):
         return self._mem_array
     
-    def load(self, address):
+    def load(self, address:int) -> number:
         return self._mem_array[address]
     
-    def store(self, address, value):
+    def store(self, address:int, value:number) -> bool:
         self._mem_array[address] = value
+
 
 
 

@@ -1,6 +1,5 @@
 # Registers package: Registers Alias Table and Architected Register File
-from reordering import IssuedInstruction
-from cpu import number
+from utils import number, IssuedInstruction
 
 
 class ArchitectedRegisterFile:
@@ -39,6 +38,8 @@ class RegistersAliasTable:
             self.entries[name] = Entry(name=name, default_value=name) 
     
     def does_entry_match_name(self, orig_name:str, assigned_name:str) -> bool:
+        if orig_name not in self.entries:
+            return False
         if self.entries[orig_name].name == assigned_name:
             return True
         return False
@@ -57,3 +58,8 @@ class RegistersAliasTable:
     
     def set_reg_value(self, name:str, value:number) -> None:
         self.arf.set_value(name, value)
+
+    def get_value_or_alias(self, name:str) -> str|number:
+        if self.does_entry_match_name(name, name):
+            return self.get_reg_value(name)
+        return self.get_alias_for_reg(name)

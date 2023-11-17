@@ -1,14 +1,15 @@
 # RS 
 from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
-from reordering import IssuedInstruction
-from cpu import number
+from funit import FunctionalUnit, AddressResolver
+from utils import number, IssuedInstruction
 
 
 INT_ADDER_RS_TYPE = "int_adder"
 DEC_ADDER_RS_TYPE = "dec_adder"
 DEC_MULTP_RS_TYPE = "dec_multp"
-LD_STORE_RS_TYPE = "ld_st_rs_type"
+LOAD_RS_TYPE = "ld_rs_type"
+STORE_RS_TYPE = "sd_rs_type"
 
 class Entry:
     """```
@@ -24,13 +25,16 @@ class Entry:
     """
     def flush(self) -> None:
         self.busy = False
+        self.in_progress = False
         self.op = ""
+        self.id = None
         self.rob = ""
         self.val1 = None
         self.val2 = None
         self.dep1 = ""
         self.dep2 = ""
         self.result = None
+        self.offset = 0
 
     def __init__(self) -> None:
         self.flush()
@@ -38,16 +42,19 @@ class Entry:
         return str(vars(self))
 
     def update(self, 
-               busy:int = None,
+               busy:bool = None,
+               in_progress:bool = None,
                op:str = None,
+               id:int = None,
                rob:str = None,
                val1:number = None,
                val2:number = None,
                dep1:str = None,
                dep2:str = None,
-               result:number = None
+               result:number = None,
+               offset:int = None
                ) -> None:
-        args = {'busy':busy,'op':op,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result}
+        args = {'busy':busy,'in_progress':in_progress,'op':op,'id':id,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result,'offset':offset}
         for arg in args:
             val = args[arg]
             if val == None:
@@ -56,13 +63,12 @@ class Entry:
         
 
 class ReservationStation(CDBConsumer):
-    """Reservation Station holds a list of `Entry`'s.
-    \nCDB consumer.
+    """Reservation Station holds a list of `RS Entries`. CDB consumer.
     """
-    def __init__(self, cdb: CentralDataBus, funit, len=3) -> None:
+    def __init__(self, cdb: CentralDataBus, funit:FunctionalUnit, len=3) -> None:
         super().__init__(cdb)
-        self.entries = [Entry() for _ in range(len)]
-        self.fu = funit # TODO
+        self.entries:list[Entry] = [Entry() for _ in range(len)]
+        self.funit:FunctionalUnit = funit
 
     def __str__(self) -> str:
         return str(vars(self))
@@ -78,18 +84,21 @@ class ReservationStation(CDBConsumer):
             if entry.busy == False:
                 entry.update(
                     busy=True,
+                    in_progress=False,
+                    id = i.id,
                     op = i.op,
                     rob=i.assigned_dest,
                     val1=i.val_left,
                     val2=i.val_right,
                     dep1=i.dep_left,
-                    dep2=i.dep_right)
+                    dep2=i.dep_right,
+                    offset=i.offset)
                 
                 self.wait_for_variable(i.assigned_dest)
                 return True
         return False
     
-    def read_cdb(self) -> int|None:
+    def read_cdb(self) -> int|None: # TODO TEST
         result = self.fetch_from_cdb()
         if result == None:
             return None
@@ -104,6 +113,61 @@ class ReservationStation(CDBConsumer):
                 entry.flush()
         return result.id
 
-    def try_execute(self):
-        pass # TODO
+    def try_execute(self) -> None|int:
+        if not self.funit.is_free():
+            return None
+        
+        # Choose an instruction to execute
+
+        #self.entries = sorted(self.entries, key=lambda e: e.id)
+        for e in self.entries:
+            if e.val1 != None and e.val2 != None and not e.in_progress:
+                is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
+                if is_issued:
+                    e.in_progress = True
+                    return e.id
+        return None
+
+
+class LoadBuffer(ReservationStation):
+    def __init__(self, cdb: CentralDataBus, funit: FunctionalUnit, len=3) -> None:
+        super().__init__(cdb, funit, len)
+        self.address_resolver = AddressResolver()
     
+    def try_execute(self) -> None|int:
+        if not self.funit.is_free():
+            return None
+        
+        # Choose an instruction to execute
+        #self.entries = sorted(self.entries, key=lambda e: e.id)
+        for e in self.entries:
+            if e.val1 != None and not e.in_progress:
+                is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1+e.offset, e.val2)
+                if is_issued:
+                    e.in_progress = True
+                    return e.id
+        return None
+
+
+class StoreBuffer(ReservationStation):
+    def __init__(self, cdb: CentralDataBus, funit: FunctionalUnit, len=3) -> None:
+        super().__init__(cdb, funit, len)
+        # TODO
+
+    def show_head(self) -> Entry|None:
+        if len(self.entries) == 0:
+            return None
+        return self.entries[0]
+
+    def try_execute(self) -> None|int:
+        if not self.funit.is_free():
+            return None
+        if len(self.entries) == 0:
+            return None
+        e = self.entries[0]
+        if e.val1 != None and not e.in_progress:
+            is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1+e.offset, e.val2)
+            if is_issued:
+                e.in_progress = True
+                return e.id
+        return None
