@@ -1,8 +1,9 @@
 class Monitor():
     def __init__(self) -> None:
-        self.instlist = []
+        self.instlist:list[MonitoredInstruction] = []
 
     def output(self):
+        """Writes an output timetable to output.txt"""
         sorted_instrs = sorted(self.instlist, key= lambda instructions: instructions.id)
         with open('output.txt', 'w') as file:
             file.write("--Id--|--Issue--|--Exe--|--Mem--|--Wrbk--|--Commit--\n")

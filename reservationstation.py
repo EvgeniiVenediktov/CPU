@@ -1,10 +1,19 @@
 # RS 
 from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
+from reordering import IssuedInstruction
+from cpu import number
 
-class Entry():
+
+INT_ADDER_RS_TYPE = "int_adder"
+DEC_ADDER_RS_TYPE = "dec_adder"
+DEC_MULTP_RS_TYPE = "dec_multp"
+LD_STORE_RS_TYPE = "ld_st_rs_type"
+
+class Entry:
     """```
     Busy - is it busy     - `busy`  
+    ROD  - ROB entry      - `rob`
     Op   - operation type - `op`    
     Vj   - value 1        - `val1`  
     Vk   - value 2        - `val2`  
@@ -14,29 +23,31 @@ class Entry():
     ```
     """
     def flush(self) -> None:
-        self.busy = 0
+        self.busy = False
         self.op = ""
-        self.val1 = 0
-        self.val2 = 0
+        self.rob = ""
+        self.val1 = None
+        self.val2 = None
         self.dep1 = ""
         self.dep2 = ""
-        self.result = 0
+        self.result = None
 
     def __init__(self) -> None:
         self.flush()
-
-    #def new(self, instr: Instruction) -> None: # TODO
+    def __str__(self) -> str:
+        return str(vars(self))
 
     def update(self, 
-               busy = None,
-               op = None,
-               val1 = None,
-               val2 = None,
-               dep1 = None,
-               dep2 = None,
-               result = None
+               busy:int = None,
+               op:str = None,
+               rob:str = None,
+               val1:number = None,
+               val2:number = None,
+               dep1:str = None,
+               dep2:str = None,
+               result:number = None
                ) -> None:
-        args = {'busy':busy,'op':op,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result}
+        args = {'busy':busy,'op':op,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result}
         for arg in args:
             val = args[arg]
             if val == None:
@@ -48,14 +59,51 @@ class ReservationStation(CDBConsumer):
     """Reservation Station holds a list of `Entry`'s.
     \nCDB consumer.
     """
-    def __init__(self, cdb: CentralDataBus, len=5,) -> None:
+    def __init__(self, cdb: CentralDataBus, funit, len=3) -> None:
         super().__init__(cdb)
         self.entries = [Entry() for _ in range(len)]
-    
-    def add_instruction(self, instr) -> bool:
+        self.fu = funit # TODO
+
+    def __str__(self) -> str:
+        return str(vars(self))
+
+    def entry_is_free(self) -> bool:
         for entry in self.entries:
-            if entry.busy == 0:
-                entry.new(instr)
+            if not entry.busy:
                 return True
         return False
+    
+    def add_instruction(self, i: IssuedInstruction) -> bool:
+        for entry in self.entries:
+            if entry.busy == False:
+                entry.update(
+                    busy=True,
+                    op = i.op,
+                    rob=i.assigned_dest,
+                    val1=i.val_left,
+                    val2=i.val_right,
+                    dep1=i.dep_left,
+                    dep2=i.dep_right)
+                
+                self.wait_for_variable(i.assigned_dest)
+                return True
+        return False
+    
+    def read_cdb(self) -> int|None:
+        result = self.fetch_from_cdb()
+        if result == None:
+            return None
+        for entry in self.entries:
+            if entry.dep1 == result.rob_dest:
+                entry.val1 = result.value
+                entry.dep1 = None
+            if entry.dep2 == result.rob_dest:
+                entry.val2 = result.value
+                entry.dep2 = None
+            if entry.rob == result.rob_dest:
+                entry.flush()
+        return result.id
+
+    def try_execute(self):
+        pass # TODO
     

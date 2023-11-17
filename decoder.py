@@ -1,8 +1,8 @@
-class Instruction():
-    def __init__(self, optype, operands, num) -> None:
-        self.inst_type = optype
-        self.operands = operands
-        self.number = num
+class Instruction:
+    def __init__(self, optype, operands, id) -> None:
+        self.inst_type:str = optype
+        self.operands:list = operands
+        self.id:int = id
     
     def __str__(self) -> str:
         return str(vars(self))
@@ -15,7 +15,7 @@ class Decoder:
         self.arguments = []
         self.instances = []
 
-    def run(self):
+    def run(self) -> list[Instruction]:
         k = 0
         with open (self.filename, "r") as f:
             for line in f:
@@ -32,32 +32,32 @@ class Decoder:
 
 class InstBuff:
     def __init__(self,filename):
-        self.mem = []
+        self.buffer = []
         self.filename = filename
         self.index = 0
 
     def refill(self):
         deck = Decoder(self.filename)
-        self.mem = deck.run()
+        self.buffer = deck.run()
         
-    def issue(self, i=None):
-        if self.index >= len(self.mem) :
+    def issue(self, i=None) -> Instruction:
+        if self.index >= len(self.buffer) :
             return None
 
         if i == None:
-            v = self.mem[self.index]
+            v = self.buffer[self.index]
             self.index += 1
             return(v)
         
-        if len(self.mem) >= i:
-            return(self.mem[i])
+        if len(self.buffer) >= i:
+            return(self.buffer[i])
 
-    
-lex = InstBuff('TestFile.txt')
-lex.refill()
-print(lex.issue())
-print(lex.issue())
-print(lex.issue())
-print(lex.issue())
-print(lex.issue())
-print(lex.issue())
+if __name__ == "__main__":
+    lex = InstBuff('TestFile.txt')
+    lex.refill()
+    print(lex.issue())
+    print(lex.issue())
+    print(lex.issue())
+    print(lex.issue())
+    print(lex.issue())
+    print(lex.issue())

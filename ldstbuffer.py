@@ -3,12 +3,12 @@ from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
 from queue import Queue
 
-class LdStConfig():
+class LdStConfig:
     def __init__(self, load_buffer_len, store_buffer_len) -> None:
         self.load_buffer_len = load_buffer_len
         self.store_buffer_len = store_buffer_len
 
-class _MemBuffer(): 
+class _MemBuffer:  # TODO remake
     def __init__(self, size: int) -> None:
         self.q = Queue(size)
 
