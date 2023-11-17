@@ -134,11 +134,11 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
 class AddressResolver:
     """Handles address resolving for LD, SD"""
     def __init__(self) -> None:
-        self.latency = 1
-        self.current_clock = 0
-        self.busy = False
+        self.latency:int = 1
+        self.current_clock:int = 0
+        self.busy:bool = False
 
-        self.inst = None
+        self.inst:DecodedInstruction = None
 
     def resolve_address(self, insrt:DecodedInstruction) -> None|int:
         if self.busy:
@@ -148,7 +148,7 @@ class AddressResolver:
         self.inst = insrt
         return insrt.id
     
-    def produce_address(self) -> None|IssuedInstruction:
+    def produce_address(self) -> None|DecodedInstruction:
         """Will return the same thing until called `address_was_processed`"""
         if self.busy and self.current_clock == 0:
             return self.inst

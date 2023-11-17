@@ -1,5 +1,5 @@
 class Instruction:
-    def __init__(self, optype, operands, id, offset) -> None:
+    def __init__(self, optype:str, operands:list, id:int, offset:int) -> None:
         self.inst_type:str = optype
         self.operands:list = operands
         self.id:int = id

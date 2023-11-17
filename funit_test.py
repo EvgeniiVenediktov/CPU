@@ -1,8 +1,9 @@
 import unittest
 from cdb import CentralDataBus
-from funit import FunctionalUnit, MemoryLoadFunctionalUnit
+from funit import FunctionalUnit, MemoryLoadFunctionalUnit, AddressResolver
 from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY_LOAD
 from memory import Memory
+from decoder import Instruction as DecodedInstruction
 
 class TestFUs(unittest.TestCase):
 
@@ -128,6 +129,48 @@ class TestFUs(unittest.TestCase):
         self.assertEqual(expected_id, actual_id)
         self.assertEqual(expected_value, cdb.current_value.value)
 
+    def test_address_resolver(self):
+        # Arrange
+        ar = AddressResolver()
+        ins = DecodedInstruction("LD", ['R1', 'R3'], 1, 2)
+
+        expected_latency = 1
+
+        # Action
+        id = ar.resolve_address(ins)
+        for clock in range(10):
+            instr = ar.produce_address()
+            if instr != None:
+                break
+        # Assert
+        self.assertEqual(clock, expected_latency)
+        self.assertEqual(id, ins.id)
+    
+    def test_address_resolver_compete(self):
+        # Arrange
+        ar = AddressResolver()
+        ins1 = DecodedInstruction("LD", ['R1', 'R3'], 1, 2)
+        ins2 = DecodedInstruction("LD", ['R2', 'R4'], 2, 3)
+
+        expected_latency = 1
+        clock = []
+        # Action
+        id = ar.resolve_address(ins1)
+        self.assertIsNotNone(id)
+        # Assert
+        self.assertIsNone(ar.resolve_address(ins2))
+        
+        instr = ar.produce_address() # 1st cycle
+        self.assertIsNone(instr)
+        self.assertIsNone(ar.resolve_address(ins2))
+
+        instr = ar.produce_address() # 2nd cycle
+        self.assertIsNotNone(instr)
+        ar.address_was_processed()
+        self.assertIsNotNone(ar.resolve_address(ins2))
+
+        
+        
 
 if __name__ == "__main__":
     unittest.main()
