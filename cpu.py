@@ -3,11 +3,11 @@ from memory import Memory
 from decoder import InstBuff
 from cdb import CentralDataBus
 from reservationstation import ReservationStation
-from reservationstation import INT_ADDER_RS_TYPE, DEC_ADDER_RS_TYPE, DEC_MULTP_RS_TYPE, LD_STORE_RS_TYPE
+from reservationstation import INT_ADDER_RS_TYPE, DEC_ADDER_RS_TYPE, DEC_MULTP_RS_TYPE, LOAD_RS_TYPE, STORE_RS_TYPE
 from output import Monitor
 from reordering import ReorderBuffer
 from registers import ArchitectedRegisterFile, RegistersAliasTable
-from funit import FunctionalUnit
+from funit import FunctionalUnit, AddressResolver
 from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY_LOAD
 from utils import number
 
@@ -59,11 +59,12 @@ res_stations = {
     INT_ADDER_RS_TYPE:ReservationStation(cdb=cdb, funit=adder_int, len=INT_ADDER_RS_LEN),
     DEC_ADDER_RS_TYPE:ReservationStation(cdb=cdb,funit=adder_dec, len=DEC_ADDER_RS_LEN),
     DEC_MULTP_RS_TYPE:ReservationStation(cdb=cdb,funit=multr_dec, len=DEC_MULTP_RS_LEN),
-    LD_STORE_RS_TYPE:ReservationStation(cdb=cdb,funit=memory_fu, len=LD_STORE_RS_LEN)
+    LOAD_RS_TYPE:ReservationStation(cdb=cdb,funit=memory_fu, len=LD_STORE_RS_LEN)
 }
 
 # Memory Module
 ## Address Resolver - TODO
+address_resolver = AddressResolver()
 ## Load/Store Buffers - TODO - 🛠️ in progress
 ## Memory - TODO
 MEM_SIZE = 256
@@ -149,6 +150,25 @@ for cycle in range(NUM_OF_CYCLES):
         id = res_stations[rs_type].try_execute()
         if id != None:
             monitor.mark_ex_start(id, cycle)
+    
+    #3. Try processing result from Address Resolver
+    resolved_instruction = address_resolver.produce_address()
+    if resolved_instruction != None:
+        rs = None
+        if resolved_instruction.op == "LD":
+            rs = res_stations[LOAD_RS_TYPE]
+        if resolved_instruction.op == "SD":
+            rs = res_stations[STORE_RS_TYPE]    
+        monitor.mark_ex_end(resolved_instruction.id, cycle)
+
+        if rob.entry_is_free() and rs.entry_is_free():
+            issued_instr = rob.add_instruction(instr)
+            if issued_instr == None:
+                raise Exception("failed to add instuction to ROB", str(issued_instr), str(rob))
+            success = rs.add_instruction(issued_instr)
+            if not success:
+                raise Exception("failed to add instuction to a RS", str(issued_instr), str(rs))
+        
 
     ### ISSUE Stage
     #1. Read inst from inst buffer
@@ -159,7 +179,16 @@ for cycle in range(NUM_OF_CYCLES):
     rs_type = ""
     t = instr.inst_type
     if t == "LD" or "SD":
-        rs_type = LD_STORE_RS_TYPE
+        #rs_type = LOAD_RS_TYPE
+        operand_replacement = rat.get_value_or_alias(instr.operands[1])
+        instr.operands[1] = operand_replacement
+        #try sending it to Address Resolver
+        ar_id = address_resolver.resolve_address(instr)
+        if ar_id == None:
+            instruction_buffer.return_to_prev_index()
+            continue
+        monitor.mark_ex_start(ar_id, cycle)
+        continue
     elif t == "Addi" or "Sub":
         rs_type = INT_ADDER_RS_TYPE
     elif t == "Add.d" or "Sub.d":

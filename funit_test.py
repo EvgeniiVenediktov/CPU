@@ -128,7 +128,6 @@ class TestFUs(unittest.TestCase):
         self.assertEqual(expected_id, actual_id)
         self.assertEqual(expected_value, cdb.current_value.value)
 
-        
 
 if __name__ == "__main__":
     unittest.main()

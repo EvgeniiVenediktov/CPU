@@ -1,7 +1,8 @@
 # Functional units: Adders, Multipliers
 from cdb import CentralDataBus, FunctionResult
 from memory import Memory as HardMemory
-from utils import number
+from utils import number, IssuedInstruction
+from decoder import Instruction as DecodedInstruction
 
 TYPE_INT_ADDER = 'INT_ADDER'
 TYPE_DEC_ADDER = 'DEC_ADDER'
@@ -128,3 +129,30 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
         self.func = func
 
         return True
+    
+
+class AddressResolver:
+    """Handles address resolving for LD, SD"""
+    def __init__(self) -> None:
+        self.latency = 1
+        self.current_clock = 0
+        self.busy = False
+
+        self.inst = None
+
+    def resolve_address(self, insrt:DecodedInstruction) -> None|int:
+        if self.busy:
+            return None
+        self.current_clock = self.latency # TODO maybe -1
+        self.busy = True
+        self.inst = insrt
+        return insrt.id
+    
+    def produce_address(self) -> None|IssuedInstruction:
+        """Will return the same thing until called `address_was_processed`"""
+        if self.busy and self.current_clock == 0:
+            return self.inst
+        self.current_clock -=1
+
+    def address_was_processed(self) -> None:
+        self.busy = False

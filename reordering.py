@@ -88,6 +88,7 @@ class ReorderBuffer(CDBConsumer):
             issi.val_right = vals[1] 
             issi.dep_left = deps[0]
             issi.dep_right = deps[1]
+            issi.offset = instr.offset
 
             self.rat.reserve_alias(issi)
 

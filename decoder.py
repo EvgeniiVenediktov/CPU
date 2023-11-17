@@ -1,8 +1,9 @@
 class Instruction:
-    def __init__(self, optype, operands, id) -> None:
+    def __init__(self, optype, operands, id, offset) -> None:
         self.inst_type:str = optype
         self.operands:list = operands
         self.id:int = id
+        self.offset:int = offset
     
     def __str__(self) -> str:
         return str(vars(self))
@@ -21,10 +22,21 @@ class Decoder:
             for line in f:
                 instruction,argument = line.split()
                 arguments = argument.split(',')
+                offset = 0
+                if instruction == "LD" or instruction == "SD":
+                    for i, arg in enumerate(arguments):
+                        lp = arg.find('(')
+                        if lp == -1:
+                            continue
+                        rp = arg.find(')')
+                        offset = int(arg[lp+1:rp])
+                        arguments[i] = arg[:lp] + arg[rp+1:]
+                        pass
+
                 for i in range(len(arguments)):
                     if arguments[i].find('R') == -1:
                         arguments[i] = int(arguments[i])
-                ins = Instruction(instruction, arguments, k)
+                ins = Instruction(instruction, arguments, k, offset)
                 self.instances.append(ins)
                 k = k + 1
         f.close()

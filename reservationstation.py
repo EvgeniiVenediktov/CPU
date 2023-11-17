@@ -1,15 +1,15 @@
 # RS 
 from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
-from reordering import IssuedInstruction
-from funit import FunctionalUnit
-from utils import number
+from funit import FunctionalUnit, AddressResolver
+from utils import number, IssuedInstruction
 
 
 INT_ADDER_RS_TYPE = "int_adder"
 DEC_ADDER_RS_TYPE = "dec_adder"
 DEC_MULTP_RS_TYPE = "dec_multp"
-LD_STORE_RS_TYPE = "ld_st_rs_type"
+LOAD_RS_TYPE = "ld_rs_type"
+STORE_RS_TYPE = "sd_rs_type"
 
 class Entry:
     """```
@@ -25,6 +25,7 @@ class Entry:
     """
     def flush(self) -> None:
         self.busy = False
+        self.in_progress = False
         self.op = ""
         self.id = None
         self.rob = ""
@@ -40,7 +41,8 @@ class Entry:
         return str(vars(self))
 
     def update(self, 
-               busy:int = None,
+               busy:bool = None,
+               in_progress:bool = None,
                op:str = None,
                id:int = None,
                rob:str = None,
@@ -50,7 +52,7 @@ class Entry:
                dep2:str = None,
                result:number = None
                ) -> None:
-        args = {'busy':busy,'op':op,'id':id,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result}
+        args = {'busy':busy,'in_progress':in_progress,'op':op,'id':id,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result}
         for arg in args:
             val = args[arg]
             if val == None:
@@ -80,6 +82,8 @@ class ReservationStation(CDBConsumer):
             if entry.busy == False:
                 entry.update(
                     busy=True,
+                    in_progress=False,
+                    id = i.id,
                     op = i.op,
                     rob=i.assigned_dest,
                     val1=i.val_left,
@@ -114,9 +118,22 @@ class ReservationStation(CDBConsumer):
 
         #self.entries = sorted(self.entries, key=lambda e: e.id)
         for e in self.entries:
-            if e.val1 != None and e.val2 != None:
+            if e.val1 != None and e.val2 != None and not e.in_progress:
                 is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
                 if is_issued:
+                    e.in_progress = True
                     return e.id
         return None
 
+
+class LoadBuffer(ReservationStation):
+    def __init__(self, cdb: CentralDataBus, funit: FunctionalUnit, len=3) -> None:
+        super().__init__(cdb, funit, len)
+        self.address_resolver = AddressResolver()
+        # TODO
+
+
+class StoreBuffer(ReservationStation):
+    def __init__(self, cdb: CentralDataBus, funit: FunctionalUnit, len=3) -> None:
+        super().__init__(cdb, funit, len)
+        # TODO
