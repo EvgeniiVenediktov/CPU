@@ -58,7 +58,7 @@ class MonitoredInstruction():
         self.commit = 0
     
     def __str__(self) -> str:
-        strIns = f'{self.id} | {self.issue} |{self.ex_start}-{self.ex_end}|{self.mem} |{self.wb} |{self.commit}'
+        strIns = f'{self.id} | {self.issue} |{self.ex_start}-{self.ex_end}|{self.mem_start} |{self.mem_end} |{self.wb} |{self.commit}'
         return(strIns)
 
 
