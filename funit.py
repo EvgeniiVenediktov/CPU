@@ -59,7 +59,7 @@ class FunctionalUnit:
         if not self.busy:
             return None
         self.current_counter -= 1
-        if self.current_counter == 0:
+        if self.current_counter <= 0:
             self.ready = True
         if self.ready:
             val = self.func(self.v1, self.v2)
