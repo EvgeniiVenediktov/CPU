@@ -15,11 +15,15 @@ class IssuedInstruction: # TODO
         self.dep_left = None
         self.dep_right = None
     
+    def __str__(self) -> str:
+        return str(vars(self))
+    
 
 class Entry:
     def __init__(self, name:str) -> None:
         self.entry_name:str = name
         self.busy:bool = False
+        self.id:int = 0
         self.type:str = ""
         self.dest:str = ""
         self.value:number = None
@@ -42,6 +46,7 @@ class ReorderBuffer(CDBConsumer):
         return False
     
     def add_instruction(self, instr:DecodedInstruction) -> IssuedInstruction:
+        """fetch available values, reserve an Alias, create a ROB entry"""
         def __process(entry:Entry, instr:DecodedInstruction) -> IssuedInstruction:
             if entry.busy:
                 return None
@@ -49,6 +54,7 @@ class ReorderBuffer(CDBConsumer):
             entry.busy = True
             entry.type = instr.inst_type
             entry.dest = orig_dest
+            entry.id = instr.id
 
             self.wait_for_variable(entry.entry_name)
 
@@ -100,28 +106,29 @@ class ReorderBuffer(CDBConsumer):
                 return res
         return None
     
-    def read_cdb(self):
+    def read_cdb(self) -> int|None:
         result = self.fetch_from_cdb()
         if result == None:
-            return
+            return None
         for entry in self.entries:
             if entry.entry_name == result.rob_dest:
                 entry.is_ready = True
                 entry.value = result.value
-                return
+                return entry.id
+        return None
             
-    def commit(self) -> None:
-        """
+    def commit(self) -> int|None:
+        """ Returns committed id or None
         1. Write value to ARF
         2. Check if RAT has the entry name:
             YES: free the RAT entry
-            NO: do nothing 
-        """
-        for i in range(self.head, len(self.entries)):
-            entry = self.entries[i]
-            if entry.is_ready:
-                entry.busy = False
-                self.rat.set_reg_value(entry.dest, entry.value)
-                if self.rat.does_entry_match_name(entry.dest, entry.entry_name):
-                    self.rat.free_alias(entry.dest)
+            NO: do nothing          """        
+        entry = self.entries[self.head]
+        if entry.is_ready:
+            entry.busy = False
+            self.rat.set_reg_value(entry.dest, entry.value)
+            if self.rat.does_entry_match_name(entry.dest, entry.entry_name):
+                self.rat.free_alias(entry.dest)
+            return entry.id
+        return None
         

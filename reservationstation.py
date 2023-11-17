@@ -34,6 +34,8 @@ class Entry:
 
     def __init__(self) -> None:
         self.flush()
+    def __str__(self) -> str:
+        return str(vars(self))
 
     def update(self, 
                busy:int = None,
@@ -62,6 +64,9 @@ class ReservationStation(CDBConsumer):
         self.entries = [Entry() for _ in range(len)]
         self.fu = funit # TODO
 
+    def __str__(self) -> str:
+        return str(vars(self))
+
     def entry_is_free(self) -> bool:
         for entry in self.entries:
             if not entry.busy:
@@ -84,7 +89,7 @@ class ReservationStation(CDBConsumer):
                 return True
         return False
     
-    def read_cdb(self):
+    def read_cdb(self) -> int|None:
         pass # TODO
 
     def try_execute(self):

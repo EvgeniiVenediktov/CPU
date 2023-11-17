@@ -6,14 +6,14 @@ from reservationstation import ReservationStation
 from reservationstation import INT_ADDER_RS_TYPE, DEC_ADDER_RS_TYPE, DEC_MULTP_RS_TYPE, LD_STORE_RS_TYPE
 from output import Monitor
 from reordering import ReorderBuffer
+from registers import ArchitectedRegisterFile, RegistersAliasTable
 
 type number = int | float
 
 PROGRAM_FILENAME = ""
 
 ### Create instances of all modules: ###
-
-# Monitor - TODO - 🛠️ in progress
+# Monitor - DONE ✔️
 monitor = Monitor()
 
 # Input Module
@@ -25,11 +25,14 @@ instruction_buffer = InstBuff(PROGRAM_FILENAME)
 cdb = CentralDataBus()
 
 # Register Module:
-## Register Alias Table - TODO
-## Architected Register File - TODO
+## Register Alias Table - DONE ✔️
+## Architected Register File - DONE ✔️
+REG_LEN = 7
+arf = ArchitectedRegisterFile(REG_LEN)
+rat = RegistersAliasTable(arf, REG_LEN)
 
 # Reorder Module:
-## Reorder Buffer - TODO
+## Reorder Buffer - DONE ✔️
 ROB_LEN = 10
 rob = ReorderBuffer(cdb, len=ROB_LEN)
 
@@ -66,26 +69,40 @@ for cycle in range(NUM_OF_CYCLES):
     """
     Commit a ready instruction from ROB:
         1. Write to ARF
+        1.1. Maybe free RAT entry
         2. Empty commited entry
         3. Update head pointer
         4. Monitor.mark_commit(ID, i)
     """
-    
+    #1. Commit a ready one from ROB
+    comitted_id = rob.commit()
+    if comitted_id != None:
+        #2. Monitor.mark_commit(ID, i)
+        monitor.mark_commit(comitted_id, cycle)
+
     ### WRITEBACK Stage
     """
     1. Check CDB and update values by all consumers:
         - ROB
         - Reservation Stations
         - LD/SD buffer
-        - RAT, RegFile:
-            1.1. If RAT entry equals to the name of the result:
-            1.2. Replace RAT entry with the Register Name
-            1.3. Update Register Entry with the value
-    2. If written anything:
-        - Monitor.mark_wb(ID, i)
-    3. Clear current values
+    2. If written anything - Monitor.mark_wb(ID, i)
+    3. Clear current value
     4. Write a value from buffer to current
     """
+    #1. Check CDB and update values by all consumers:
+    written_value_id = None
+    written_value_id = rob.read_cdb()
+    for rs_name in res_stations:
+        written_value_id = res_stations[rs_name].read_cdb()
+    # TODO written_value_id = LD/SD.read_cdb()
+
+    #2. If written anything - Monitor.mark_wb(ID, i)
+    if written_value_id != None:
+        monitor.mark_wb(written_value_id, cycle)
+        
+    #3. Clear current CDB value and Write a value from buffer to current
+    cdb.flush_current_bump_buffered()
 
     ### MEMORY Stage
     """
@@ -129,6 +146,7 @@ for cycle in range(NUM_OF_CYCLES):
         rs_type = DEC_ADDER_RS_TYPE
     elif t == "Mult.d":
         rs_type = DEC_MULTP_RS_TYPE
+    # TODO add support of Branch instructions
     
     #2. Check if resources available - Appropriate RS entry or LD/SD buf entry
     matching_rs = res_stations[rs_type]
@@ -137,13 +155,26 @@ for cycle in range(NUM_OF_CYCLES):
     #2.1. Check if resources available - ROB entry
     if not rob.entry_is_free():
         continue
-    """
-    3. Read operands:
+
+    #3. Prepare operands, write to RS, ROB:
+    """3. Read operands:
         3.1. Read RAT - get RegisterNum or RS_entry
         3.2. Read (available) sources: if RegNum - Take RegValue, if RS_entry - set dependency to it
-        3.3. Update RAT - fill the corresponding entry with assigned RS_entry
-    4. Write to RS and ROB --- ! OR call AddressResolver, write to LD/SD buffer
-    5. Monitor.mark_issue(ID, i)
+        3.3. Update RAT - fill the corresponding entry with assigned RS_entry"""
+    issued_instr = rob.add_instruction(instr)
+    if issued_instr == None:
+        continue
+
+    #4. Write to RS:
+    success = matching_rs.add_instruction(issued_instr)
+    if not success:
+        raise Exception("failed to add instuction to a RS", str(issued_instr), str(matching_rs))
+
+    #5. Monitor.mark_issue(ID, i)
+    monitor.mark_issue(instr.id, cycle)
+
+    """
+    4. TODO: call AddressResolver, write to LD/SD buffer
     """
     pass 
 
