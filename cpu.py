@@ -125,7 +125,15 @@ for cycle in range(NUM_OF_CYCLES):
     2. Start loading/storing from the LD/SD buffer
     3. Set mem_busy_counter = specific num of CC
     """
-    #1. If rob.head - Store instruction, start executing it
+    #1. Try producing result to CDB from Loader and Storer
+    id = memory_loader_fu.produce_result()
+    if id != None:
+        monitor.mark_mem_end(id, cycle)
+    id = None
+    id = memory_storer_fu.produce_result()
+    if id != None:
+        monitor.mark_mem_end(id, cycle)
+    #2. If rob.head - Store instruction, start executing it
     rob_head = rob.show_head_entry()
     if rob_head.type == "SD":
         sd_buf_head = store_buffer.show_head()
@@ -133,9 +141,12 @@ for cycle in range(NUM_OF_CYCLES):
             if rob_head.id == sd_buf_head.id:
                 id = store_buffer.try_execute()
                 if id != None:
-                    monitor.mark_mem(id, cycle)
+                    monitor.mark_mem_start(id, cycle)
                     rob_head.in_progress = True
-
+    #3. Try exec Load:
+    id = load_buffer.try_execute()
+    if id != None:
+        monitor.mark_mem_start(id, cycle)
 
     ### EXECUTION Stage
     """ FU - functional unit
@@ -238,9 +249,6 @@ for cycle in range(NUM_OF_CYCLES):
     #5. Monitor.mark_issue(ID, i)
     monitor.mark_issue(instr.id, cycle)
 
-    """
-    4. TODO: call AddressResolver, write to LD/SD buffer
-    """
     pass 
 
 ### Create Output TimeTable: ###

@@ -138,7 +138,7 @@ class TestFUs(unittest.TestCase):
 
         # Action
         id = ar.resolve_address(ins)
-        for clock in range(10):
+        for clock in range(1,10):
             instr = ar.produce_address()
             if instr != None:
                 break
@@ -155,16 +155,12 @@ class TestFUs(unittest.TestCase):
         expected_latency = 1
         clock = []
         # Action
-        id = ar.resolve_address(ins1)
+        id = ar.resolve_address(ins1) #0 cycle
         self.assertIsNotNone(id)
         # Assert
         self.assertIsNone(ar.resolve_address(ins2))
-        
-        instr = ar.produce_address() # 1st cycle
-        self.assertIsNone(instr)
-        self.assertIsNone(ar.resolve_address(ins2))
 
-        instr = ar.produce_address() # 2nd cycle
+        instr = ar.produce_address() # 1st cycle
         self.assertIsNotNone(instr)
         ar.address_was_processed()
         self.assertIsNotNone(ar.resolve_address(ins2))

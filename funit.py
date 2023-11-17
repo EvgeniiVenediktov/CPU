@@ -147,7 +147,7 @@ class AddressResolver:
     def resolve_address(self, insrt:DecodedInstruction) -> None|int:
         if self.busy:
             return None
-        self.current_clock = self.latency # TODO maybe -1
+        self.current_clock = self.latency -1
         self.busy = True
         self.inst = insrt
         return insrt.id
