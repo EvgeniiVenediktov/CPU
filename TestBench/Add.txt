@@ -1,0 +1,4 @@
+LD R1,R1
+LD R2,R2
+Add R3,R2,R1
+Sd R3,R3
