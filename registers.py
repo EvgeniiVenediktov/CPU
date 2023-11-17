@@ -1,6 +1,6 @@
 # Registers package: Registers Alias Table and Architected Register File
 from reordering import IssuedInstruction
-from cpu import number
+from utils import number
 
 
 class ArchitectedRegisterFile:

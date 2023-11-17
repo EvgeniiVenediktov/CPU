@@ -35,22 +35,29 @@ class InstBuff:
         self.buffer = []
         self.filename = filename
         self.index = 0
+        self.prev_index = 0
 
     def refill(self):
         deck = Decoder(self.filename)
         self.buffer = deck.run()
         
     def issue(self, i=None) -> Instruction:
-        if self.index >= len(self.buffer) :
+        if self.index >= len(self.buffer):
             return None
 
         if i == None:
             v = self.buffer[self.index]
+            self.prev_index = self.index
             self.index += 1
             return(v)
         
         if len(self.buffer) >= i:
+            self.prev_index = self.index
+            self.index = i
             return(self.buffer[i])
+        
+    def return_to_prev_index(self) -> None:
+        self.index = self.prev_index
 
 if __name__ == "__main__":
     lex = InstBuff('TestFile.txt')

@@ -7,8 +7,7 @@ from reservationstation import INT_ADDER_RS_TYPE, DEC_ADDER_RS_TYPE, DEC_MULTP_R
 from output import Monitor
 from reordering import ReorderBuffer
 from registers import ArchitectedRegisterFile, RegistersAliasTable
-
-type number = int | float
+from utils import number
 
 PROGRAM_FILENAME = ""
 
@@ -39,21 +38,25 @@ rob = ReorderBuffer(cdb, len=ROB_LEN)
 # Branch predictor - TODO - in the next iteration
 
 # Execution Module
-## Functional Modules (Adders, Multipliers) - TODO
+## Functional Modules (Adders, Multipliers) - DONE ✔️
 ## Functional Module Buffers (Int buffer, Float buffer) - DONE ✔️ - store values here if CDB is ocuppied
-## Reservation Stations - TODO - 🛠️ in progress
-RS_LEN = 5
+## Reservation Stations - DONE ✔️
+
+INT_ADDER_RS_LEN = 2
+DEC_ADDER_RS_LEN = 3
+DEC_MULTP_RS_LEN = 2
+LD_STORE_RS_LEN = 3
 res_stations = {
-    INT_ADDER_RS_TYPE:ReservationStation(cdb=cdb, len=RS_LEN),
-    DEC_ADDER_RS_TYPE:ReservationStation(cdb=cdb, len=RS_LEN),
-    DEC_MULTP_RS_TYPE:ReservationStation(cdb=cdb, len=RS_LEN),
-    LD_STORE_RS_TYPE:ReservationStation(cdb=cdb, len=RS_LEN)
+    INT_ADDER_RS_TYPE:ReservationStation(cdb=cdb, len=INT_ADDER_RS_LEN),
+    DEC_ADDER_RS_TYPE:ReservationStation(cdb=cdb, len=DEC_ADDER_RS_LEN),
+    DEC_MULTP_RS_TYPE:ReservationStation(cdb=cdb, len=DEC_MULTP_RS_LEN),
+    LD_STORE_RS_TYPE:ReservationStation(cdb=cdb, len=LD_STORE_RS_LEN)
 }
 
 # Memory Module
 ## Address Resolver - TODO
 ## Load/Store Buffers - TODO - 🛠️ in progress
-## Memory - DONE ✔️
+## Memory - TODO
 mem_init_file = ""
 hard_memory = Memory(mem_init_file)
 
@@ -81,20 +84,12 @@ for cycle in range(NUM_OF_CYCLES):
         monitor.mark_commit(comitted_id, cycle)
 
     ### WRITEBACK Stage
-    """
-    1. Check CDB and update values by all consumers:
-        - ROB
-        - Reservation Stations
-        - LD/SD buffer
-    2. If written anything - Monitor.mark_wb(ID, i)
-    3. Clear current value
-    4. Write a value from buffer to current
-    """
     #1. Check CDB and update values by all consumers:
     written_value_id = None
     written_value_id = rob.read_cdb()
     for rs_name in res_stations:
         written_value_id = res_stations[rs_name].read_cdb()
+
     # TODO written_value_id = LD/SD.read_cdb()
 
     #2. If written anything - Monitor.mark_wb(ID, i)
@@ -136,6 +131,9 @@ for cycle in range(NUM_OF_CYCLES):
     ### ISSUE Stage
     #1. Read inst from inst buffer
     instr = instruction_buffer.issue()
+    if instr == None:
+        print(f"Nothing issued, cycle {cycle}")
+        continue
     rs_type = ""
     t = instr.inst_type
     if t == "LD" or "SD":
@@ -151,9 +149,11 @@ for cycle in range(NUM_OF_CYCLES):
     #2. Check if resources available - Appropriate RS entry or LD/SD buf entry
     matching_rs = res_stations[rs_type]
     if not matching_rs.entry_is_free():
+        instruction_buffer.return_to_prev_index()
         continue
     #2.1. Check if resources available - ROB entry
     if not rob.entry_is_free():
+        instruction_buffer.return_to_prev_index()
         continue
 
     #3. Prepare operands, write to RS, ROB:
@@ -163,7 +163,7 @@ for cycle in range(NUM_OF_CYCLES):
         3.3. Update RAT - fill the corresponding entry with assigned RS_entry"""
     issued_instr = rob.add_instruction(instr)
     if issued_instr == None:
-        continue
+        raise Exception("failed to add instuction to ROB", str(issued_instr), str(rob))
 
     #4. Write to RS:
     success = matching_rs.add_instruction(issued_instr)

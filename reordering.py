@@ -1,6 +1,6 @@
 from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
-from cpu import number
+from utils import number
 from registers import RegistersAliasTable
 from decoder import Instruction as DecodedInstruction
 
@@ -29,7 +29,8 @@ class Entry:
         self.value:number = None
         self.is_ready:bool = False
         pass # TODO
-
+    def __str__(self) -> str:
+        return str(vars(self))
 
 class ReorderBuffer(CDBConsumer):
     def __init__(self, cdb: CentralDataBus, rat:RegistersAliasTable, len=10) -> None:
@@ -38,6 +39,8 @@ class ReorderBuffer(CDBConsumer):
         self.head = 0
         self.rat = rat
         # TODO
+    def __str__(self) -> str:
+        return str(vars(self))
     
     def entry_is_free(self) -> bool:
         for entry in self.entries:

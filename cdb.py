@@ -1,5 +1,5 @@
 # CDB - Central Data Bus module
-from cpu import number
+from utils import number
 
 class FunctionResult:
     def __init__(self, id:int, rob_dest: str, value:number, function:str) -> None:
@@ -21,8 +21,7 @@ class CentralDataBus:
         self.__current_value = None
         self.__fu_buffs :dict[str, list[FunctionResult]] = {INT_ADDER_NAME:[], DEC_ADDER_NAME:[], DEC_MULTR_NAME:[]}
 
-    def write(self, id:int, rob_dest: str, value:number, function:str) -> None:
-        result = FunctionResult(id, rob_dest, value, function)
+    def write(self, result:FunctionResult) -> None:
         if self.__current_value == None:
             self.__current_value = result
             return

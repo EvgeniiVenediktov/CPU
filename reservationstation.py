@@ -2,7 +2,8 @@
 from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
 from reordering import IssuedInstruction
-from cpu import number
+from funit import FunctionalUnit
+from utils import number
 
 
 INT_ADDER_RS_TYPE = "int_adder"
@@ -25,6 +26,7 @@ class Entry:
     def flush(self) -> None:
         self.busy = False
         self.op = ""
+        self.id = None
         self.rob = ""
         self.val1 = None
         self.val2 = None
@@ -40,6 +42,7 @@ class Entry:
     def update(self, 
                busy:int = None,
                op:str = None,
+               id:int = None,
                rob:str = None,
                val1:number = None,
                val2:number = None,
@@ -47,7 +50,7 @@ class Entry:
                dep2:str = None,
                result:number = None
                ) -> None:
-        args = {'busy':busy,'op':op,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result}
+        args = {'busy':busy,'op':op,'id':id,'rob':rob,'val1':val1,'val2':val2,'dep1':dep1,'dep2':dep2,'result':result}
         for arg in args:
             val = args[arg]
             if val == None:
@@ -56,13 +59,12 @@ class Entry:
         
 
 class ReservationStation(CDBConsumer):
-    """Reservation Station holds a list of `Entry`'s.
-    \nCDB consumer.
+    """Reservation Station holds a list of `RS Entries`. CDB consumer.
     """
-    def __init__(self, cdb: CentralDataBus, funit, len=3) -> None:
+    def __init__(self, cdb: CentralDataBus, funit:FunctionalUnit, len=3) -> None:
         super().__init__(cdb)
-        self.entries = [Entry() for _ in range(len)]
-        self.fu = funit # TODO
+        self.entries:list[Entry] = [Entry() for _ in range(len)]
+        self.funit:FunctionalUnit = funit
 
     def __str__(self) -> str:
         return str(vars(self))
@@ -104,6 +106,14 @@ class ReservationStation(CDBConsumer):
                 entry.flush()
         return result.id
 
-    def try_execute(self):
-        pass # TODO
-    
+    def try_execute(self) -> None:
+        if not self.funit.is_free():
+            return
+        
+        # Choose an instruction to execute
+
+        #self.entries = sorted(self.entries, key=lambda e: e.id)
+        for e in self.entries:
+            if e.val1 != None and e.val2 != None:
+                self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
+
