@@ -11,7 +11,10 @@ from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, Mem
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
-PROGRAM_FILENAME = "TestFile.txt"
+#PROGRAM_FILENAME = "./TestBench/Add.txt"
+PROGRAM_FILENAME = "./TestBench/Hazards copy.txt"
+#PROGRAM_FILENAME = "./TestBench/Multi.d.txt"
+#PROGRAM_FILENAME = "./TestBench/RSFull.txt"
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -59,7 +62,7 @@ memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory
 
 func_units = [adder_int, adder_dec, multr_dec]
 
-INT_ADDER_RS_LEN = 2
+INT_ADDER_RS_LEN = 4
 DEC_ADDER_RS_LEN = 3
 DEC_MULTP_RS_LEN = 2
 
@@ -73,7 +76,7 @@ res_stations = {
 ## Address Resolver - DONE ✔️
 address_resolver = AddressResolver()
 ## Load/Store Buffers - DONE ✔️
-LD_SD_BUF_LEN = 3
+LD_SD_BUF_LEN = 5
 load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
 
@@ -91,7 +94,7 @@ def end_cycle():
     store_buffer.end_cycle()
 
 ### Run for N clock cycles: ###
-NUM_OF_CYCLES = 30
+NUM_OF_CYCLES = 300
 for cycle in range(1,NUM_OF_CYCLES):
     ### COMMIT Stage
     """
@@ -208,7 +211,7 @@ for cycle in range(1,NUM_OF_CYCLES):
         monitor.mark_ex_end(resolved_instruction.id, cycle)
 
         if rob.entry_is_free() and rs.entry_is_free():
-            issued_instr = rob.add_instruction(instr)
+            issued_instr = rob.add_instruction(resolved_instruction)
             if issued_instr == None:
                 raise Exception("failed to add instuction to ROB", str(issued_instr), str(rob))
             success = rs.add_instruction(issued_instr)
@@ -284,3 +287,7 @@ for cycle in range(1,NUM_OF_CYCLES):
 ### Create Output TimeTable: ###
 monitor.output()
 
+with open("regs.txt", "w") as f:
+    f.write(str(arf))
+with open("rat.txt", "w") as f:
+    f.write(str(rat))

@@ -27,7 +27,8 @@ class Entry:
 
     def reset_value(self) -> None:
         self.value = self.default_value
-
+    def __str__(self) -> str:
+        return str(vars(self))
 
 class RegistersAliasTable:
     def __init__(self, arf:ArchitectedRegisterFile, length=7) -> None:
@@ -37,19 +38,26 @@ class RegistersAliasTable:
             name = f'R{i}'
             self.entries[name] = Entry(name=name, default_value=name) 
     
+    def __str__(self) -> str:
+        s = ""
+        for en in self.entries:
+            entry = self.entries[en]
+            s+=str(entry)+"\n"
+        return s
+    
     def does_entry_match_name(self, orig_name:str, assigned_name:str) -> bool:
         if orig_name not in self.entries:
             return False
         e = self.entries[orig_name]
-        if e.name == assigned_name:
+        if e.value == assigned_name:
             return True
         return False
 
     def reserve_alias(self, instr:IssuedInstruction) -> None:
-        self.entries[instr.original_dest].name = instr.assigned_dest
+        self.entries[instr.original_dest].value = instr.assigned_dest
 
     def get_alias_for_reg(self, reg:str) -> str:
-        return self.entries[reg].name
+        return self.entries[reg].value
 
     def free_alias(self, orig_name:str) -> None:
         self.entries[orig_name].reset_value()

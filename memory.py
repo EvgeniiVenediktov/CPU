@@ -56,10 +56,10 @@ class Memory:
         return self._mem_array
     
     def load(self, address:int) -> number:
-        return self._mem_array[address]
+        return self._mem_array[int(address)]
     
     def store(self, address:int, value:number) -> bool:
-        self._mem_array[address] = value
+        self._mem_array[int(address)] = value
 
 
 
