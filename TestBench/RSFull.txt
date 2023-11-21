@@ -1,10 +1,10 @@
 LD F1,4(R3)
 LD F2,0(R5)
 LD F3,8(R4)
-Multi.d F3,F2,F1
+Mult.d F3,F2,F1
 Div.d F5,F3,F1
 Div.d F4,F2,F1
-Multi.d F1,F3,F4
+Mult.d F1,F3,F4
 SD F1,0(R7)
 SD F2,0(R1)
 SD F3,4(R8)
