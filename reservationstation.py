@@ -69,6 +69,7 @@ class ReservationStation(CDBConsumer):
         super().__init__(cdb)
         self.entries:list[Entry] = [Entry() for _ in range(len)]
         self.funit:FunctionalUnit = funit
+        self.busy_this_cycle = []
 
     def __str__(self) -> str:
         return str(vars(self))
@@ -78,6 +79,9 @@ class ReservationStation(CDBConsumer):
             if not entry.busy:
                 return True
         return False
+    
+    def end_cycle(self) -> None:
+        self.busy_this_cycle = []
     
     def add_instruction(self, i: IssuedInstruction) -> bool:
         for entry in self.entries:
@@ -94,7 +98,7 @@ class ReservationStation(CDBConsumer):
                     dep2=i.dep_right,
                     offset=i.offset)
                 
-                self.wait_for_variable(i.assigned_dest)
+                self.wait_for_variables([i.assigned_dest, i.dep_left, i.dep_right])
                 return True
         return False
     
@@ -102,15 +106,20 @@ class ReservationStation(CDBConsumer):
         result = self.fetch_from_cdb()
         if result == None:
             return None
-        for entry in self.entries:
+        affected = []
+        for i, entry in enumerate(self.entries):
             if entry.dep1 == result.rob_dest:
                 entry.val1 = result.value
                 entry.dep1 = None
+                affected.append(i)
             if entry.dep2 == result.rob_dest:
                 entry.val2 = result.value
                 entry.dep2 = None
+                if i not in affected:
+                    affected.append(i)
             if entry.rob == result.rob_dest:
                 entry.flush()
+        self.busy_this_cycle = affected
         return result.id
 
     def try_execute(self) -> None|int:
@@ -120,8 +129,8 @@ class ReservationStation(CDBConsumer):
         # Choose an instruction to execute
 
         #self.entries = sorted(self.entries, key=lambda e: e.id)
-        for e in self.entries:
-            if e.val1 != None and e.val2 != None and not e.in_progress:
+        for i, e in enumerate(self.entries):
+            if e.val1 != None and e.val2 != None and not e.in_progress and i not in self.busy_this_cycle:
                 is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
                 if is_issued:
                     e.in_progress = True
@@ -140,8 +149,8 @@ class LoadBuffer(ReservationStation):
         
         # Choose an instruction to execute
         #self.entries = sorted(self.entries, key=lambda e: e.id)
-        for e in self.entries:
-            if e.val1 != None and not e.in_progress:
+        for i, e in enumerate(self.entries):
+            if e.val1 != None and not e.in_progress and i not in self.busy_this_cycle:
                 is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1+e.offset, e.val2)
                 if is_issued:
                     e.in_progress = True
@@ -165,7 +174,7 @@ class StoreBuffer(ReservationStation):
         if len(self.entries) == 0:
             return None
         e = self.entries[0]
-        if e.val1 != None and not e.in_progress:
+        if e.val1 != None and not e.in_progress and 0 not in self.busy_this_cycle:
             is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1+e.offset, e.val2)
             if is_issued:
                 e.in_progress = True

@@ -15,3 +15,9 @@ class IssuedInstruction: # TODO
     def __str__(self) -> str:
         return str(vars(self))
     
+
+TYPE_INT_ADDER = 'INT_ADDER'
+TYPE_DEC_ADDER = 'DEC_ADDER'
+TYPE_DEC_MULTP = 'DEC_MULTP'
+TYPE_MEMORY_LOAD = 'MEMORY_LOADER'
+TYPE_MEMORY_STORE = 'MEMORY_STORER'

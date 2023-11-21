@@ -68,17 +68,20 @@ class ReorderBuffer(CDBConsumer):
             for i in range(1,len(instr.operands)): # start from 1 bc [0] - destination
                 op = instr.operands[i]
                 if isinstance(op, str):
-                    deps[i] = op
+                    deps[i-1] = op
                 else:
-                    vals[i] = op
+                    vals[i-1] = op
 
-            for dep in deps:
+            for i, dep in enumerate(deps):
                 if dep == None:
                     continue
                 if self.rat.does_entry_match_name(dep, dep):
                     dep = self.rat.get_reg_value(dep)
                 else:
-                    dep = self.rat.get_alias_for_reg(dep)
+                    if dep[:3] == "ROB":
+                        continue
+                    deps[i] = self.rat.get_alias_for_reg(dep)
+                    pass
 
             issi = IssuedInstruction()
             issi.id = instr.id
@@ -117,6 +120,13 @@ class ReorderBuffer(CDBConsumer):
         result = self.fetch_from_cdb()
         if result == None:
             return None
+        
+        if result.op == "SD":
+            if self.show_head_entry().id == result.id:
+                self.entries[self.head].is_ready = True
+                self.entries[self.head].in_progress = False
+                return self.show_head_entry().id
+
         for entry in self.entries:
             if entry.entry_name == result.rob_dest:
                 entry.is_ready = True
@@ -137,11 +147,22 @@ class ReorderBuffer(CDBConsumer):
             YES: free the RAT entry
             NO: do nothing          """        
         entry = self.entries[self.head]
-        if entry.is_ready:
-            entry.busy = False
-            self.rat.set_reg_value(entry.dest, entry.value)
-            if self.rat.does_entry_match_name(entry.dest, entry.entry_name):
-                self.rat.free_alias(entry.dest)
-            return entry.id
-        return None
+
+        if not entry.is_ready:
+            return None
+        
+        entry.busy = False
+        entry.in_progress = False
+        self.rat.set_reg_value(entry.dest, entry.value)
+        if self.rat.does_entry_match_name(entry.dest, entry.entry_name):
+            self.rat.free_alias(entry.dest)
+        self.set_new_head()
+        return entry.id
+    
+    def set_new_head(self) -> None:
+        nh = self.head + 1
+        if nh >= len(self.entries):
+            nh = nh % len(self.entries)
+        self.head = nh
+
         

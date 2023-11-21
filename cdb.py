@@ -1,17 +1,14 @@
 # CDB - Central Data Bus module
 from utils import number
+from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 
 class FunctionResult:
-    def __init__(self, id:int, rob_dest: str, value:number, function:str) -> None:
+    def __init__(self, id:int, rob_dest: str, value:number, op:str, producer:str) -> None:
         self.id = id
         self.rob_dest = rob_dest
         self.value = value
-        self.function = function
-
-
-INT_ADDER_NAME = "addi"
-DEC_ADDER_NAME = "addd"
-DEC_MULTR_NAME = "multd"
+        self.op = op
+        self.producer = producer
 
 
 class CentralDataBus:
@@ -19,14 +16,14 @@ class CentralDataBus:
     """
     def __init__(self) -> None:
         self.current_value = None
-        self.fu_buffs :dict[str, list[FunctionResult]] = {INT_ADDER_NAME:[], DEC_ADDER_NAME:[], DEC_MULTR_NAME:[]}
+        self.fu_buffs :dict[str, list[FunctionResult]] = {TYPE_INT_ADDER:[],TYPE_DEC_ADDER:[],TYPE_DEC_MULTP:[],TYPE_MEMORY_LOAD:[],TYPE_MEMORY_STORE:[]}
 
     def write(self, result:FunctionResult) -> None:
         if self.current_value == None:
             self.current_value = result
             return
-        self.fu_buffs[function].append(result)
-        self.fu_buffs[function] = sorted(self.fu_buffs[function], key=lambda r: r.id)
+        self.fu_buffs[result.producer].append(result)
+        self.fu_buffs[result.producer] = sorted(self.fu_buffs[result.producer], key=lambda r: r.id)
 
     def read(self) -> FunctionResult:
         return self.current_value
@@ -46,6 +43,9 @@ class CentralDataBus:
                 lowest = result.id
                 new_current = result
                 function = func
+        if new_current == None:
+            self.current_value = None
+            return 
         # Remove selected
         del self.fu_buffs[function][0]
 

@@ -2,7 +2,7 @@ import unittest
 from reservationstation import Entry, ReservationStation, LoadBuffer
 from cdb import CentralDataBus
 from funit import FunctionalUnit, MemoryLoadFunctionalUnit
-from funit import TYPE_INT_ADDER, TYPE_DEC_ADDER, TYPE_DEC_MULTP, TYPE_MEMORY_LOAD
+from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import IssuedInstruction
 from memory import Memory
 

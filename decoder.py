@@ -1,5 +1,5 @@
 class Instruction:
-    def __init__(self, optype:str, operands:list, id:int, offset:int) -> None:
+    def __init__(self, optype:str, operands:list, id:int, offset:int=0) -> None:
         self.inst_type:str = optype
         self.operands:list = operands
         self.id:int = id
@@ -19,18 +19,20 @@ class Decoder:
     def run(self) -> list[Instruction]:
         k = 0
         with open (self.filename, "r") as f:
-            for line in f:
+            for i, line in enumerate(f):
                 instruction,argument = line.split()
                 arguments = argument.split(',')
                 offset = 0
                 if instruction == "LD" or instruction == "SD":
                     for i, arg in enumerate(arguments):
+                        if i == 0:
+                            continue
                         lp = arg.find('(')
                         if lp == -1:
-                            continue
+                            raise Exception(f"Wrong syntax for instruction #{i}: Couldn't find '('. {line}")
                         rp = arg.find(')')
-                        offset = int(arg[lp+1:rp])
-                        arguments[i] = arg[:lp] + arg[rp+1:]
+                        offset = int(arg[:lp])
+                        arguments[i] = arg[lp+1:rp]
                         pass
 
                 for i in range(len(arguments)):
