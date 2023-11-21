@@ -16,11 +16,18 @@ class Decoder:
         self.arguments = []
         self.instances = []
 
+    def split_by_space_in_two(self, l:str) -> tuple[str, str]:
+        sr = l.split()
+        if len(sr) == 1:
+            return sr[0], ","
+        return sr[0], sr[1]
+
     def run(self) -> list[Instruction]:
         k = 0
         with open (self.filename, "r") as f:
             for i, line in enumerate(f):
-                instruction,argument = line.split()
+                #instruction,argument = line.split()
+                instruction, argument = self.split_by_space_in_two(line)
                 arguments = argument.split(',')
                 offset = 0
                 if instruction == "LD" or instruction == "SD":
@@ -36,7 +43,7 @@ class Decoder:
                         pass
 
                 for i in range(len(arguments)):
-                    if arguments[i].find('R') == -1:
+                    if arguments[i].find('R') == -1 and arguments[i]!='':
                         arguments[i] = int(arguments[i])
                 ins = Instruction(instruction, arguments, k, offset)
                 self.instances.append(ins)

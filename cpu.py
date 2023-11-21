@@ -229,6 +229,9 @@ for cycle in range(1,NUM_OF_CYCLES):
         continue
     rs_type = ""
     t = instr.inst_type
+    if t == "EOF":
+        print(f"EOF, finish of simulation. Cycle #{cycle}")
+        break
     if t == "LD" or t == "SD":
         #rs_type = LOAD_RS_TYPE
         operand_replacement = rat.get_value_or_alias(instr.operands[1])

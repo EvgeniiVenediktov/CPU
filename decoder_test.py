@@ -1,4 +1,5 @@
 import unittest
+import os
 from decoder import Instruction
 from decoder import Decoder
 from decoder import InstBuff
@@ -17,11 +18,18 @@ class testInstruction(unittest.TestCase):
 
 class testDecoder(unittest.TestCase):
     def setUp(self):
-        self.filename = "TestFile.txt"
+        self.offset_filename = "TestFile.txt"
+        self.eof_fname = "test_eof.txt"
+        with open(self.eof_fname, "w") as f:
+            f.write("EOF")
+
+    def tearDown(self) -> None:
+        if os.path.exists(self.eof_fname):
+            os.remove(self.eof_fname)
 
     def test_offset(self):
         # Arrange
-        decoder = Decoder(filename=self.filename)
+        decoder = Decoder(filename=self.offset_filename)
 
         expected_offset = int(2)
         expected_instr_type = "LD"
@@ -35,6 +43,25 @@ class testDecoder(unittest.TestCase):
         self.assertEqual(expected_offset, instr.offset)
         self.assertEqual(expected_instr_type, instr.inst_type)
         self.assertEqual(expected_args, instr.operands)
+    
+    def test_eof(self):
+        # Arrange
+        decoder = Decoder(self.eof_fname)
+
+        expected_type = "EOF"
+        expected_ops = ['', '']
+        expected_offset = 0
+
+        # Action
+        instrs = decoder.run()
+        instr = instrs[0]
+
+        # Assert
+        self.assertEqual(len(instrs), 1)
+        self.assertEqual(expected_type, instr.inst_type)
+        self.assertEqual(expected_ops, instr.operands)
+        self.assertEqual(expected_offset, instr.offset)
+
 
 if __name__ == '__main__':
     unittest.main()
