@@ -1,0 +1,4 @@
+LD F1,8(R2)
+LD F2,0(R3)
+Sub.d F3,F2,F1
+SD F3,4(R5)
