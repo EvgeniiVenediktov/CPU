@@ -43,8 +43,11 @@ class Decoder:
                         pass
 
                 for i in range(len(arguments)):
-                    if arguments[i].find('R') == -1 and arguments[i]!='':
-                        arguments[i] = int(arguments[i])
+                    if arguments[i]=='':
+                        continue
+                    if arguments[i].find('R') == -1 and arguments[i].find('F') == -1:
+                        arguments[i] = float(arguments[i])
+
                 ins = Instruction(instruction, arguments, k, offset)
                 self.instances.append(ins)
                 k = k + 1

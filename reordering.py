@@ -153,7 +153,8 @@ class ReorderBuffer(CDBConsumer):
         
         entry.busy = False
         entry.in_progress = False
-        self.rat.set_reg_value(entry.dest, entry.value)
+        if entry.value != None:
+            self.rat.set_reg_value(entry.dest, entry.value)
         if self.rat.does_entry_match_name(entry.dest, entry.entry_name):
             self.rat.free_alias(entry.dest)
         self.set_new_head()

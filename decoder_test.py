@@ -12,8 +12,8 @@ class testInstruction(unittest.TestCase):
         self.assertEqual(ins.id, 0)
         
     def test_str(self):
-        ins = Instruction(optype="MULTI", operands=['R1', 'R3', 'R5'], id=2)
-        self.assertEqual(str(ins),"{'inst_type': 'MULTI', 'operands': ['R1', 'R3', 'R5'], 'id': 2, 'offset': 0}")
+        ins = Instruction(optype="MULT", operands=['R1', 'R3', 'R5'], id=2)
+        self.assertEqual(str(ins),"{'inst_type': 'MULT', 'operands': ['R1', 'R3', 'R5'], 'id': 2, 'offset': 0}")
 
 
 class testDecoder(unittest.TestCase):

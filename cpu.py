@@ -12,8 +12,8 @@ from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,
 from utils import number
 
 #PROGRAM_FILENAME = "./TestBench/Add.txt"
-PROGRAM_FILENAME = "./TestBench/Hazards copy.txt"
-#PROGRAM_FILENAME = "./TestBench/Multi.d.txt"
+#PROGRAM_FILENAME = "./TestBench/Hazards copy.txt"
+PROGRAM_FILENAME = "./TestBench/Multi.d.txt"
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt"
 
 ### Create instances of all modules: ###
