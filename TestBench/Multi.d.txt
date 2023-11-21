@@ -1,4 +1,4 @@
-LD F1,F1
-LD F2,F2
+LD F1,8(R2)
+LD F2,0(R3)
 Multi.d F3,F2,F1
-Sd F3, F3
+SD F3,4(R5)
