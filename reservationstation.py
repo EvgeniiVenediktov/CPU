@@ -166,6 +166,13 @@ class StoreBuffer(ReservationStation):
     def show_head(self) -> Entry|None:
         if len(self.entries) == 0:
             return None
+        
+        def skey(e:Entry) -> int:
+            if e.id == None:
+                return int(99999999999999999999999)
+            return e.id
+
+        self.entries = sorted(self.entries, key=lambda e: skey(e))
         return self.entries[0]
 
     def try_execute(self) -> None|int:
@@ -175,7 +182,7 @@ class StoreBuffer(ReservationStation):
             return None
         e = self.entries[0]
         if e.val1 != None and not e.in_progress and 0 not in self.busy_this_cycle:
-            is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1+e.offset, e.val2)
+            is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2+e.offset)
             if is_issued:
                 e.in_progress = True
                 return e.id

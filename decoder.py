@@ -4,6 +4,8 @@ class Instruction:
         self.operands:list = operands
         self.id:int = id
         self.offset:int = offset
+
+        self.original_dest = None # Only to be used for LD instructions
     
     def __str__(self) -> str:
         return str(vars(self))

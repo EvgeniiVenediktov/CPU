@@ -4,6 +4,6 @@ LD F3,8(R1)
 Add.d F3,F1,F2
 Sub.d F5,F6,F3
 Mult.d F3,F4,F5
-Div.d F3,F1,F2
+Mult.d F3,F1,F2
 SD F5,8(R5)
 SD F3,0(R3)
