@@ -59,7 +59,7 @@ multr_dec = FunctionalUnit(TYPE_DEC_MULTP, cdb)
 
 ## Memory - DONE ✔️
 MEM_SIZE = 256
-mem_init_file = ""
+mem_init_file = "mem_init_file.txt"
 hard_memory = Memory(mem_init_file, MEM_SIZE)
 
 memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory)
@@ -314,3 +314,4 @@ with open("regs.txt", "w") as f:
     f.write(str(arf))
 with open("rat.txt", "w") as f:
     f.write(str(rat))
+hard_memory.memory_dump()
