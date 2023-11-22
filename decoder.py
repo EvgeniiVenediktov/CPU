@@ -40,7 +40,7 @@ class Decoder:
                         if lp == -1:
                             raise Exception(f"Wrong syntax for instruction #{i}: Couldn't find '('. {line}")
                         rp = arg.find(')')
-                        offset = int(arg[:lp])//4 # make offsets byte vals
+                        offset = int(arg[:lp])
                         arguments[i] = arg[lp+1:rp]
                         pass
 

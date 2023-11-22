@@ -132,7 +132,7 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
             raise Exception("Not supported instruction:", op, "FuncUnit:",self.unit_type)
         
         def wrap_load(v1, v2):
-            return self.mem.load(v1)
+            return self.mem.load(int(v1//4))
         
         func = wrap_load
         
@@ -162,7 +162,7 @@ class MemoryStoreFunctionalUnit(FunctionalUnit):
             raise Exception("Not supported instruction:", op, "FuncUnit:",self.unit_type)
         
         def wrap_store(v1, v2):
-            return self.mem.store(v2, v1)
+            return self.mem.store(int(v2//4), v1)
 
         func = wrap_store
         

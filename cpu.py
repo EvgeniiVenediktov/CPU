@@ -7,7 +7,7 @@ from reservationstation import ReservationStation, LoadBuffer, StoreBuffer
 from reservationstation import INT_ADDER_RS_TYPE, DEC_ADDER_RS_TYPE, DEC_MULTP_RS_TYPE, LOAD_RS_TYPE, STORE_RS_TYPE
 from output import Monitor
 from reordering import ReorderBuffer
-from registers import ArchitectedRegisterFile, RegistersAliasTable
+from registers import ArchitectedRegisterFile, RegistersAliasTable, parse_register_init_values
 from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, MemoryStoreFunctionalUnit
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
@@ -36,9 +36,14 @@ cdb = CentralDataBus()
 # Register Module:
 ## Register Alias Table - DONE ✔️
 ## Architected Register File - DONE ✔️
-REG_LEN = 32
-arf = ArchitectedRegisterFile(REG_LEN)
-rat = RegistersAliasTable(arf, REG_LEN)
+REG_R_LEN = 32
+REG_F_LEN = 32
+REG_INIT_VALS_FNAME = "registers_init_vals.txt"
+initial_reg_values = {} # TODO add parsing
+if len(REG_INIT_VALS_FNAME) != 0:
+    initial_reg_values = parse_register_init_values(REG_INIT_VALS_FNAME)
+arf = ArchitectedRegisterFile(initial_reg_values, REG_R_LEN, REG_F_LEN)
+rat = RegistersAliasTable(arf, REG_R_LEN, REG_F_LEN)
 
 # Reorder Module:
 ## Reorder Buffer - DONE ✔️
