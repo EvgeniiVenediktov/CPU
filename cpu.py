@@ -13,7 +13,8 @@ from utils import number
 
 #PROGRAM_FILENAME = "./TestBench/Add.txt"
 #PROGRAM_FILENAME = "./TestBench/Hazards copy.txt"
-PROGRAM_FILENAME = "./TestBench/Multi.d.txt"
+PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/Multi.d.txt"
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt"
 
 ### Create instances of all modules: ###
@@ -62,7 +63,7 @@ memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory
 
 func_units = [adder_int, adder_dec, multr_dec]
 
-INT_ADDER_RS_LEN = 4
+INT_ADDER_RS_LEN = 2
 DEC_ADDER_RS_LEN = 3
 DEC_MULTP_RS_LEN = 2
 
@@ -76,7 +77,7 @@ res_stations = {
 ## Address Resolver - DONE ✔️
 address_resolver = AddressResolver()
 ## Load/Store Buffers - DONE ✔️
-LD_SD_BUF_LEN = 5
+LD_SD_BUF_LEN = 3
 load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
 
@@ -232,8 +233,15 @@ for cycle in range(1,NUM_OF_CYCLES):
     if t == "EOF":
         print(f"EOF, finish of simulation. Cycle #{cycle}")
         break
-    if t == "LD" or t == "SD":
+    if t == "LD" or t == "SD": 
+        # Syntax: SD F2,10(R3) // F2 - value, 10+R3 - source
+        # Syntax: LD F2,10(R3) // F2 - dest, 10+R3 - source
         #rs_type = LOAD_RS_TYPE
+        if t == "LD":
+            instr.original_dest = instr.operands[0]
+        if t == "SD":
+            operand_replacement = rat.get_value_or_alias(instr.operands[0])
+            instr.operands[0] = operand_replacement
         operand_replacement = rat.get_value_or_alias(instr.operands[1])
         instr.operands[1] = operand_replacement
         #try sending it to Address Resolver

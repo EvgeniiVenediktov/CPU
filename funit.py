@@ -7,10 +7,10 @@ from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,
 
 LATENCIES = {
     TYPE_INT_ADDER: 1,
-    TYPE_DEC_ADDER: 4,
-    TYPE_DEC_MULTP: 15,
-    TYPE_MEMORY_LOAD: 5,
-    TYPE_MEMORY_STORE: 5,
+    TYPE_DEC_ADDER: 3,
+    TYPE_DEC_MULTP: 20,
+    TYPE_MEMORY_LOAD: 4,
+    TYPE_MEMORY_STORE: 4,
 }
 
 def subi(v1, v2):
@@ -117,6 +117,7 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
         
         if op not in OP_FUNC_MAPPING and op != "LD":
             raise Exception("Not supported instruction:", op, "FuncUnit:",self.unit_type)
+        
         def wrap_load(v1, v2):
             return self.mem.load(v1)
         
@@ -128,8 +129,8 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
 
         self.id = id
         self.rob = rob
-        self.v1 = v1
-        self.v2 = v2
+        self.v1 = v1 # addr+offset
+        self.v2 = v2 # None
         self.op = op
         self.func = func
 
@@ -147,7 +148,10 @@ class MemoryStoreFunctionalUnit(FunctionalUnit):
         if op not in OP_FUNC_MAPPING and op != "SD":
             raise Exception("Not supported instruction:", op, "FuncUnit:",self.unit_type)
         
-        func = self.mem.store
+        def wrap_store(v1, v2):
+            return self.mem.store(v2, v1)
+
+        func = wrap_store
         
         self.current_counter = self.latency-1
         self.busy = True
@@ -155,8 +159,8 @@ class MemoryStoreFunctionalUnit(FunctionalUnit):
 
         self.id = id
         self.rob = rob
-        self.v1 = v1
-        self.v2 = v2
+        self.v1 = v1 # value
+        self.v2 = v2 # addr+offset
         self.op = op
         self.func = func
 
@@ -174,6 +178,9 @@ class AddressResolver:
 
     def resolve_address(self, insrt:DecodedInstruction) -> None|int:
         if self.busy:
+            return None
+        # Check for dependency in address:
+        if str(insrt.operands[1]).find('R') != -1:
             return None
         self.current_clock = self.latency -1
         self.busy = True

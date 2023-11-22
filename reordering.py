@@ -14,6 +14,7 @@ class IssuedInstruction: # TODO
         self.val_right = None
         self.dep_left = None
         self.dep_right = None
+        self.offset = 0
     
     def __str__(self) -> str:
         return str(vars(self))
@@ -55,8 +56,14 @@ class ReorderBuffer(CDBConsumer):
             if entry.busy:
                 return None
             orig_dest = instr.operands[0]
-            entry.busy = True
             entry.type = instr.inst_type
+            if entry.type == "LD":
+                orig_dest = instr.original_dest
+            s = 1
+            if entry.type == "SD":
+                orig_dest = "MEM"
+                s = 0
+            entry.busy = True
             entry.dest = orig_dest
             entry.id = instr.id
 
@@ -65,22 +72,31 @@ class ReorderBuffer(CDBConsumer):
             vals = [None, None]
             deps = [None, None]
 
-            for i in range(1,len(instr.operands)): # start from 1 bc [0] - destination
+        
+            for i in range(s,len(instr.operands)): # start from 1 bc [0] - destination
                 op = instr.operands[i]
                 if isinstance(op, str):
-                    deps[i-1] = op
+                    deps[i-s] = op
                 else:
-                    vals[i-1] = op
+                    vals[i-s] = op
 
             for i, dep in enumerate(deps):
                 if dep == None:
                     continue
                 if self.rat.does_entry_match_name(dep, dep):
-                    dep = self.rat.get_reg_value(dep)
+                    vals[i] = self.rat.get_reg_value(dep)
+                    deps[i] = None
                 else:
                     if dep[:3] == "ROB":
                         continue
-                    deps[i] = self.rat.get_alias_for_reg(dep)
+                    if instr.inst_type != "SD":
+                        deps[i] = self.rat.get_alias_for_reg(dep)
+                    # Check if ROB contains the ready value
+                    for rentry in self.entries:
+                        if rentry.entry_name == deps[i] and rentry.is_ready and not rentry.in_progress:
+                            vals[i] = rentry.value
+                            deps[i] = None
+                            break
                     pass
 
             issi = IssuedInstruction()
@@ -94,7 +110,8 @@ class ReorderBuffer(CDBConsumer):
             issi.dep_right = deps[1]
             issi.offset = instr.offset
 
-            self.rat.reserve_alias(issi)
+            if orig_dest != "MEM":
+                self.rat.reserve_alias(issi)
 
             entry.busy = True
             entry.dest = orig_dest
