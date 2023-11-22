@@ -1,9 +1,25 @@
 # Registers package: Registers Alias Table and Architected Register File
 from utils import number, IssuedInstruction
 
+def parse_register_init_values(fname:str) -> dict:
+    r = {}
+    with open(fname) as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.removesuffix("\n")
+            tokens = line.split(',')
+            addr = tokens[0]
+            value = 0
+            if tokens[1].find('.') != -1:
+                value = float(tokens[1])
+            else: 
+                value = int(tokens[1])
+            r[addr] = value
+        f.close()
+    return r
 
 class ArchitectedRegisterFile:
-    def __init__(self, length_r=32, length_f=32) -> None:
+    def __init__(self, initial_values={}, length_r=32, length_f=32) -> None:
         self.length_r=length_r
         self.length_f=length_f
         
@@ -20,20 +36,27 @@ class ArchitectedRegisterFile:
             name = f'F{i}'
             self.fnames.append(name)
             self.entries[name] = 0
+        for name in initial_values:
+            if name in self.rnames or name in self.fnames:
+                self.entries[name] = initial_values[name]
     
     def get_value(self, name:str) -> number:
         return self.entries[name]
     
     def set_value(self, name:str, val:number) -> None:
+        if name == "R0": # Hardwire R0 to zero
+            val = 0
         self.entries[name] = val
     
     def __str__(self) -> str:
         s = ""
         for n in self.rnames:
-            s += f"{n}: {self.entries[n]} "
+            if self.entries[n]!=0:
+                s += f"{n}: {self.entries[n]}, "
         s += "\n"
         for n in self.fnames:
-            s += f"{n}: {self.entries[n]} "
+            if self.entries[n]!=0:
+                s += f"{n}: {self.entries[n]}, "
         return s
     
 

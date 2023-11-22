@@ -28,7 +28,7 @@ class Memory:
             for line in lines:
                 line = line.removesuffix("\n")
                 tokens = line.split(',')
-                addr = int(tokens[0])
+                addr = int(tokens[0])//4
                 value = 0
                 if tokens[1].find('.') != -1:
                     value = float(tokens[1])
