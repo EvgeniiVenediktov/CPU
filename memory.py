@@ -38,16 +38,17 @@ class Memory:
             f.close()
     
     def __init__(self, init_file_name:str='', mem_size:int=256):
-        self._mem_array = [0 for _ in range(mem_size)]
+        self._mem_array = [0 for _ in range(mem_size//4)]
         if len(init_file_name) != 0:
             self.__init_from_file(init_file_name)
         
-    def memory_dump(self, output_file_name=''):
-        if output_file_name == '':
-            output_file_name = 'memory_dump.txt'
-        with open(output_file_name, mode="w") as f:
+    def memory_dump(self, output_file_name='memory_dump.txt'):
+        with open(output_file_name, mode="w", encoding="utf-8") as f:
+            f.write('|{:^5}|{:^12}|\n'.format("cell", "value"))
             for i, val in enumerate(self._mem_array):
-                s = f"{i}   , {val}\n"
+                if val == 0:
+                    continue
+                s = '|{:>5}|{:^12}|\n'.format(i*4, val)
                 f.write(s)
             f.close()
 
