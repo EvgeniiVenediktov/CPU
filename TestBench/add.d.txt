@@ -1,4 +1,4 @@
 LD F1,0(R1)
 LD F2,4(R2)
 Add.d F3,F2,F1
-Sd F3,0(R3)
+SD F3,0(R3)
