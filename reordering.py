@@ -170,6 +170,7 @@ class ReorderBuffer(CDBConsumer):
         
         entry.busy = False
         entry.in_progress = False
+        entry.is_ready = False
         if entry.value != None:
             self.rat.set_reg_value(entry.dest, entry.value)
         if self.rat.does_entry_match_name(entry.dest, entry.entry_name):

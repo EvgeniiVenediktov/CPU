@@ -1,4 +1,5 @@
 # CPU simulation
+import copy
 from memory import Memory
 from decoder import InstBuff
 from cdb import CentralDataBus
@@ -11,12 +12,12 @@ from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, Mem
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
-#PROGRAM_FILENAME = "./TestBench/Add.txt"
-#PROGRAM_FILENAME = "./TestBench/Hazards copy.txt"
+#PROGRAM_FILENAME = "./TestBench/ForwardingStore.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/RSFull.txt" # Checked ✔️
+PROGRAM_FILENAME = "./TestBench/Add.txt"
+
 #PROGRAM_FILENAME = "./TestBench/Multi.d.txt"
-#PROGRAM_FILENAME = "./TestBench/RSFull.txt"
-PROGRAM_FILENAME = "./TestBench/ForwardingStore.txt"
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -229,7 +230,8 @@ for cycle in range(1,NUM_OF_CYCLES):
 
     ### ISSUE Stage
     #1. Read inst from inst buffer
-    instr = instruction_buffer.issue()
+    original_instr = instruction_buffer.issue()
+    instr = copy.deepcopy(original_instr)
     if instr == None:
         print(f"Nothing issued, cycle {cycle}")
         end_cycle()

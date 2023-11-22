@@ -20,31 +20,37 @@ class Monitor():
         for inst in self.instlist:
             if inst.id == id:
                 inst.ex_start = exec_cycle
+                return
     
     def mark_ex_end(self, id, exec_cycle):
         for inst in self.instlist:
             if inst.id == id:
                 inst.ex_end = exec_cycle
+                return
     
     def mark_mem_start(self, id, mem_cycle):
         for inst in self.instlist:
             if inst.id == id:
                 inst.mem_start = mem_cycle
+                return
 
     def mark_mem_end(self, id, mem_cycle):
         for inst in self.instlist:
             if inst.id == id:
                 inst.mem_end = mem_cycle
+                return
 
     def mark_wb(self, id, wb_cycle):
         for inst in self.instlist:
             if inst.id == id:
                 inst.wb = wb_cycle
+                return
 
     def mark_commit(self, id, commit_cycle):
         for inst in self.instlist:
             if inst.id == id:
                 inst.commit = commit_cycle
+                return
 
 class MonitoredInstruction():
     def __init__(self,id,issue) -> None:

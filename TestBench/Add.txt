@@ -1,4 +1,4 @@
 LD R1,0(R1)
 LD R2,4(R2)
 Add R3,R2,R1
-Sd R3,8(R3)
+SD R3,8(R3)
