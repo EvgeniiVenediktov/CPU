@@ -81,9 +81,10 @@ class FunctionalUnit:
 
         return None
 
-    def execute(self, id:int, rob:str, op:str, v1:number, v2:number) -> bool:
+    def execute(self, id:int, rob:str, op:str, v1:number, v2:number) -> tuple[bool, bool]:
+        is_the_result_ready = False
         if self.busy or self.used_at_this_cycle:
-            return False
+            return False, is_the_result_ready
         
         if op not in OP_FUNC_MAPPING:
             raise Exception("Not supported instruction:", op, "FuncUnit:",self.unit_type)
@@ -100,7 +101,10 @@ class FunctionalUnit:
         self.op = op
         self.func = func
 
-        return True
+        if self.current_counter == 0:
+            is_the_result_ready = True
+
+        return True, is_the_result_ready
     
     def release_at_the_end_of_cycle(self):
         self.used_at_this_cycle = False

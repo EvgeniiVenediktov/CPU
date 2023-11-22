@@ -13,9 +13,10 @@ from utils import number
 
 #PROGRAM_FILENAME = "./TestBench/Add.txt"
 #PROGRAM_FILENAME = "./TestBench/Hazards copy.txt"
-PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Multi.d.txt"
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt"
+PROGRAM_FILENAME = "./TestBench/ForwardingStore.txt"
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -196,9 +197,14 @@ for cycle in range(1,NUM_OF_CYCLES):
     #2. Try starting execution from each of RS:
     for rs_type in res_stations:
         rs = res_stations[rs_type]
-        id = rs.try_execute()
+        id, result_is_ready = rs.try_execute()
         if id != None:
             monitor.mark_ex_start(id, cycle)
+            if result_is_ready:
+                fu = rs.funit
+                id = fu.produce_result()
+                if id != None:
+                    monitor.mark_ex_end(id, cycle)
     
     #3. Try processing result from Address Resolver
     resolved_instruction = address_resolver.produce_address()

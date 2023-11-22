@@ -122,20 +122,20 @@ class ReservationStation(CDBConsumer):
         self.busy_this_cycle = affected
         return result.id
 
-    def try_execute(self) -> None|int:
+    def try_execute(self) -> tuple[None|int, bool]:
         if not self.funit.is_free():
-            return None
+            return None, False
         
         # Choose an instruction to execute
 
         #self.entries = sorted(self.entries, key=lambda e: e.id)
         for i, e in enumerate(self.entries):
             if e.val1 != None and e.val2 != None and not e.in_progress and i not in self.busy_this_cycle:
-                is_issued = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
+                is_issued, result_is_ready = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
                 if is_issued:
                     e.in_progress = True
-                    return e.id
-        return None
+                    return e.id, result_is_ready
+        return None, False
 
 
 class LoadBuffer(ReservationStation):
