@@ -12,12 +12,13 @@ from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, Mem
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
-PROGRAM_FILENAME = "./TestBench/Ld_Sd_Add.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/Ld_Sd_Add.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt" # Checked ✔️
-#PROGRAM_FILENAME = "./TestBench/Add.txt" # Checked ✔️
+PROGRAM_FILENAME = "./TestBench/Add.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Multi.d.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/add.d.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -41,7 +42,8 @@ rat = RegistersAliasTable(arf, REG_LEN)
 
 # Reorder Module:
 ## Reorder Buffer - DONE ✔️
-ROB_LEN = 10
+ROB_LEN = 10 # Desc value
+#ROB_LEN = 64 # Demo value
 rob = ReorderBuffer(cdb, rat, len=ROB_LEN)
 
 # Branch predictor - TODO - in the next iteration
@@ -65,7 +67,8 @@ memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory
 
 func_units = [adder_int, adder_dec, multr_dec]
 
-INT_ADDER_RS_LEN = 2
+#INT_ADDER_RS_LEN = 4 # Demo value
+INT_ADDER_RS_LEN = 2 # Desc value
 DEC_ADDER_RS_LEN = 3
 DEC_MULTP_RS_LEN = 2
 
@@ -79,7 +82,8 @@ res_stations = {
 ## Address Resolver - DONE ✔️
 address_resolver = AddressResolver()
 ## Load/Store Buffers - DONE ✔️
-LD_SD_BUF_LEN = 3
+#LD_SD_BUF_LEN = 10 # Demo value
+LD_SD_BUF_LEN = 3 # Desc value
 load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
 

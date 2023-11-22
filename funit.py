@@ -5,6 +5,7 @@ from utils import number, IssuedInstruction
 from decoder import Instruction as DecodedInstruction
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 
+# Project description values
 LATENCIES = {
     TYPE_INT_ADDER: 1,
     TYPE_DEC_ADDER: 3,
@@ -12,6 +13,14 @@ LATENCIES = {
     TYPE_MEMORY_LOAD: 4,
     TYPE_MEMORY_STORE: 4,
 }
+# Demo values
+"""LATENCIES = {
+    TYPE_INT_ADDER: 1,
+    TYPE_DEC_ADDER: 4,
+    TYPE_DEC_MULTP: 15,
+    TYPE_MEMORY_LOAD: 5,
+    TYPE_MEMORY_STORE: 5,
+}"""
 
 def subi(v1, v2):
     return int(v1-v2)
