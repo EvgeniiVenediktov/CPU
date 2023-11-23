@@ -315,8 +315,8 @@ for cycle in range(1,NUM_OF_CYCLES):
 ### Create Output TimeTable: ###
 monitor.output()
 
-with open("regs.txt", "w") as f:
+with open("dump_regs.txt", "w",encoding="utf-8") as f:
     f.write(str(arf))
-with open("rat.txt", "w") as f:
+with open("dump_rat.txt", "w",encoding="utf-8") as f:
     f.write(str(rat))
 hard_memory.memory_dump()

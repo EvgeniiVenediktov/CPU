@@ -42,14 +42,17 @@ class Memory:
         if len(init_file_name) != 0:
             self.__init_from_file(init_file_name)
         
-    def memory_dump(self, output_file_name='memory_dump.txt'):
+    def memory_dump(self, output_file_name='dump_memory.txt'):
         with open(output_file_name, mode="w", encoding="utf-8") as f:
-            f.write('|{:^5}|{:^12}|\n'.format("cell", "value"))
+            f.write('┌──────┬───────────┐\n')
+            f.write('|-cell-|---value---|\n')
+            f.write("├──────┴───────────┤\n")
             for i, val in enumerate(self._mem_array):
                 if val == 0:
                     continue
-                s = '|{:>5}|{:^12}|\n'.format(i*4, val)
+                s = '|{:>6}|{:^11}|\n'.format(i*4, val)
                 f.write(s)
+            f.write('└──────┴───────────┘')
             f.close()
 
 

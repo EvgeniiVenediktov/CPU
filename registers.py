@@ -49,14 +49,16 @@ class ArchitectedRegisterFile:
         self.entries[name] = val
     
     def __str__(self) -> str:
-        s = ""
+        s  = "┌──────┬───────┐\n"
+        s += "|-name-|-value-|\n"
+        s += "├──────┴───────┤\n"
         for n in self.rnames:
             if self.entries[n]!=0:
-                s += f"{n}: {self.entries[n]}, "
-        s += "\n"
+                s += "|{:^6}|{:^7}|\n".format(n,self.entries[n])
         for n in self.fnames:
             if self.entries[n]!=0:
-                s += f"{n}: {self.entries[n]}, "
+                s += "|{:^6}|{:^7}|\n".format(n,self.entries[n])
+        s += "└──────┴───────┘"
         return s
     
 
@@ -69,7 +71,7 @@ class Entry:
     def reset_value(self) -> None:
         self.value = self.default_value
     def __str__(self) -> str:
-        return str(f"name:{self.name}, value:{self.value}")
+        return str("|{:^6}|{:^7}|".format(self.name,self.value))
 
 class RegistersAliasTable:
     def __init__(self, arf:ArchitectedRegisterFile, length_r=32, length_f=32) -> None:
@@ -83,10 +85,13 @@ class RegistersAliasTable:
             self.entries[name] = Entry(name=name, default_value=name) 
     
     def __str__(self) -> str:
-        s = ""
+        s  = "┌──────┬───────┐\n"
+        s += "|-name-|-value-|\n"
+        s += "├──────┴───────┤\n"
         for en in self.entries:
             entry = self.entries[en]
             s+=str(entry)+"\n"
+        s += "└──────┴───────┘"
         return s
     
     def does_entry_match_name(self, orig_name:str, assigned_name:str) -> bool:
