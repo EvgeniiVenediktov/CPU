@@ -51,7 +51,7 @@ class ArchitectedRegisterFile:
     def __str__(self) -> str:
         s  = "┌──────┬───────┐\n"
         s += "|-name-|-value-|\n"
-        s += "├──────┴───────┤\n"
+        s += "├──────┼───────┤\n"
         for n in self.rnames:
             if self.entries[n]!=0:
                 s += "|{:^6}|{:^7}|\n".format(n,self.entries[n])
@@ -87,7 +87,7 @@ class RegistersAliasTable:
     def __str__(self) -> str:
         s  = "┌──────┬───────┐\n"
         s += "|-name-|-value-|\n"
-        s += "├──────┴───────┤\n"
+        s += "├──────┼───────┤\n"
         for en in self.entries:
             entry = self.entries[en]
             s+=str(entry)+"\n"

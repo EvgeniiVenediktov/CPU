@@ -5,11 +5,14 @@ class Monitor():
     def output(self):
         """Writes an output timetable to output.txt"""
         sorted_instrs = sorted(self.instlist, key= lambda instructions: instructions.id)
-        with open('output.txt', 'w') as file:
+        with open('output.txt', 'w', encoding="utf-8") as file:
+            file.write("┌──────┬─────────┬─────────────┬─────────────┬────────┬──────────┐\n")
             file.write("|--Id--|--Issue--|-----Exe-----|-----Mem-----|--Wrbk--|--Commit--|\n")
+            file.write("├──────┼─────────┼─────────────┼─────────────┼────────┼──────────┤\n")
             for instr in sorted_instrs:
                 file.write('|{:^5} | {:^7} | {:^5}-{:^5} | {:^5}-{:^5} | {:^6} | {:^9}|\n'.format(
                     instr.id, instr.issue, instr.ex_start, instr.ex_end, instr.mem_start,instr.mem_end, instr.wb, instr.commit))
+            file.write("└──────┴─────────┴─────────────┴─────────────┴────────┴──────────┘")
         file.close()
 
     def mark_issue(self, id, issue_cycle):

@@ -3,11 +3,6 @@ from utils import number
 
 class Memory:
     """
-    Memory unit does Load and Store.
-    With `MEM_SIZE`==64 It simulates memory with the size of 256 Bytes.
-    For this project we support Int32 and Float32, so each one of them takes 32 Bits = 4 Bytes.
-    Each section of `mem_array` can contain a number.
-
     Memory initializes with zeros in all the cells. To init it with some information, it
     should be passed as an argument in .txt format, where each line conveys to this style:
     ```
@@ -17,7 +12,7 @@ class Memory:
         |mem_addr ,   value    |
         |______________________|
         |   12    ,    144     |
-        |   33    ,    10.5    |
+        |   32    ,    10.5    |
         |______________________|
     ```
 
@@ -46,7 +41,7 @@ class Memory:
         with open(output_file_name, mode="w", encoding="utf-8") as f:
             f.write('┌──────┬───────────┐\n')
             f.write('|-cell-|---value---|\n')
-            f.write("├──────┴───────────┤\n")
+            f.write("├──────┼───────────┤\n")
             for i, val in enumerate(self._mem_array):
                 if val == 0:
                     continue
