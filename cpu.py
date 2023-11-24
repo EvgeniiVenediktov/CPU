@@ -15,10 +15,10 @@ from utils import number
 #PROGRAM_FILENAME = "./TestBench/Ld_Sd_Add.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt" # Checked ✔️
-PROGRAM_FILENAME = "./TestBench/Add.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/Add.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Multi.d.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/add.d.txt" # Checked ✔️
-#PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
+PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -38,7 +38,7 @@ cdb = CentralDataBus()
 ## Architected Register File - DONE ✔️
 REG_R_LEN = 32
 REG_F_LEN = 32
-REG_INIT_VALS_FNAME = "registers_init_vals.txt"
+REG_INIT_VALS_FNAME = "init_registers_vals.txt"
 initial_reg_values = {} # TODO add parsing
 if len(REG_INIT_VALS_FNAME) != 0:
     initial_reg_values = parse_register_init_values(REG_INIT_VALS_FNAME)
@@ -47,8 +47,8 @@ rat = RegistersAliasTable(arf, REG_R_LEN, REG_F_LEN)
 
 # Reorder Module:
 ## Reorder Buffer - DONE ✔️
-ROB_LEN = 10 # Desc value
-#ROB_LEN = 64 # Demo value
+#ROB_LEN = 10 # Desc value
+ROB_LEN = 64 # Demo value
 rob = ReorderBuffer(cdb, rat, len=ROB_LEN)
 
 # Branch predictor - TODO - in the next iteration
@@ -64,7 +64,7 @@ multr_dec = FunctionalUnit(TYPE_DEC_MULTP, cdb)
 
 ## Memory - DONE ✔️
 MEM_SIZE = 256
-mem_init_file = "mem_init_file.txt"
+mem_init_file = "init_mem_file.txt"
 hard_memory = Memory(mem_init_file, MEM_SIZE)
 
 memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory)
@@ -72,8 +72,8 @@ memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory
 
 func_units = [adder_int, adder_dec, multr_dec]
 
-#INT_ADDER_RS_LEN = 4 # Demo value
-INT_ADDER_RS_LEN = 2 # Desc value
+INT_ADDER_RS_LEN = 4 # Demo value
+#INT_ADDER_RS_LEN = 2 # Desc value
 DEC_ADDER_RS_LEN = 3
 DEC_MULTP_RS_LEN = 2
 
@@ -87,8 +87,8 @@ res_stations = {
 ## Address Resolver - DONE ✔️
 address_resolver = AddressResolver()
 ## Load/Store Buffers - DONE ✔️
-#LD_SD_BUF_LEN = 10 # Demo value
-LD_SD_BUF_LEN = 3 # Desc value
+LD_SD_BUF_LEN = 10 # Demo value
+#LD_SD_BUF_LEN = 3 # Desc value
 load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
 
@@ -253,7 +253,6 @@ for cycle in range(1,NUM_OF_CYCLES):
     if t == "LD" or t == "SD": 
         # Syntax: SD F2,10(R3) // F2 - value, 10+R3 - source
         # Syntax: LD F2,10(R3) // F2 - dest, 10+R3 - source
-        #rs_type = LOAD_RS_TYPE
         if t == "LD":
             instr.original_dest = instr.operands[0]
         if t == "SD":
@@ -261,9 +260,9 @@ for cycle in range(1,NUM_OF_CYCLES):
             instr.operands[0] = operand_replacement
         operand_replacement = rat.get_value_or_alias(instr.operands[1])
         instr.operands[1] = operand_replacement
+        
         #try sending it to Address Resolver
         ar_id = address_resolver.resolve_address(instr)
-
         if ar_id == None:
             instruction_buffer.return_to_prev_index()
             end_cycle()
@@ -271,6 +270,7 @@ for cycle in range(1,NUM_OF_CYCLES):
         monitor.mark_issue(ar_id, cycle)
         end_cycle()
         continue
+    
     elif t == "Add" or t == "Addi" or t == "Sub":
         rs_type = INT_ADDER_RS_TYPE
     elif t == "Add.d" or t == "Sub.d":
