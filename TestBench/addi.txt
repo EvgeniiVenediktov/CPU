@@ -5,6 +5,4 @@ Add.d F6,F4,F6
 SD F6,0(R2)
 Addi R1,R1,-4
 Addi R2,R2,-4
-Addi R1,R1,-4
-Addi R2,R2,-4
 Add.d F20,F2,F2
