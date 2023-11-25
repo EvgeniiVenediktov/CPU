@@ -1,5 +1,5 @@
 LD R1,4(R1)
 LD R2,0(R2)
-SD F4, 0(R5)
-LD F2, 0(R5)
+SD F4,0(R5)
+LD F2,0(R5)
 Add.d F2,F1,F3
