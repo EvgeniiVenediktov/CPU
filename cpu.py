@@ -12,13 +12,13 @@ from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, Mem
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
-#PROGRAM_FILENAME = "./TestBench/Ld_Sd_Add.txt" # Checked ✔️
+PROGRAM_FILENAME = "./TestBench/Sd_Ld_Forwarding.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Add.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Multi.d.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/add.d.txt" # Checked ✔️
-PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
