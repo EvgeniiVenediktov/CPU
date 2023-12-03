@@ -39,7 +39,7 @@ cdb = CentralDataBus()
 REG_R_LEN = 32
 REG_F_LEN = 32
 REG_INIT_VALS_FNAME = "init_registers_vals.txt"
-initial_reg_values = {} # TODO add parsing
+initial_reg_values = {}
 if len(REG_INIT_VALS_FNAME) != 0:
     initial_reg_values = parse_register_init_values(REG_INIT_VALS_FNAME)
 arf = ArchitectedRegisterFile(initial_reg_values, REG_R_LEN, REG_F_LEN)
@@ -67,9 +67,6 @@ MEM_SIZE = 256
 mem_init_file = "init_mem_file.txt"
 hard_memory = Memory(mem_init_file, MEM_SIZE)
 
-memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory)
-memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory)
-
 func_units = [adder_int, adder_dec, multr_dec]
 
 INT_ADDER_RS_LEN = 4 # Demo value
@@ -89,8 +86,12 @@ address_resolver = AddressResolver()
 ## Load/Store Buffers - DONE ✔️
 LD_SD_BUF_LEN = 10 # Demo value
 #LD_SD_BUF_LEN = 3 # Desc value
-load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
+
+memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory)
 store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
+
+memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory, store_buffer)
+load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 
 
 def end_cycle():
@@ -118,10 +119,12 @@ for cycle in range(1,NUM_OF_CYCLES):
         4. Monitor.mark_commit(ID, i)
     """
     #1. Commit a ready one from ROB
+    something_was_commited = False
     comitted_id = rob.commit()
     if comitted_id != None:
         #2. Monitor.mark_commit(ID, i)
         monitor.mark_commit(comitted_id, cycle)
+        something_was_commited = True
 
     ### WRITEBACK Stage
     #1. Check CDB and update values by all consumers:
@@ -169,14 +172,17 @@ for cycle in range(1,NUM_OF_CYCLES):
         monitor.mark_mem_end(id, cycle)
     #2. If rob.head - Store instruction, start executing it
     rob_head = rob.show_head_entry()
-    if rob_head.type == "SD":
+    if rob_head.type == "SD" and not something_was_commited:
         sd_buf_head = store_buffer.show_head()
         if not rob_head.in_progress and sd_buf_head != None:
             if rob_head.id == sd_buf_head.id:
-                id = store_buffer.try_execute()
+                id = store_buffer.try_execute() # send to SD/LD forwarding buffer - DONE ✔️
                 if id != None:
                     monitor.mark_mem_start(id, cycle)
-                    rob_head.in_progress = True
+                    rob_head.is_ready = 1
+                    committed_id = rob.commit()
+                    monitor.mark_commit(committed_id, cycle)
+                    
     #3. Try exec Load:
     id = load_buffer.try_execute()
     if id != None:

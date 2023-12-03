@@ -3,7 +3,8 @@ from cdb import CentralDataBus, FunctionResult
 from memory import Memory as HardMemory
 from utils import number, IssuedInstruction
 from decoder import Instruction as DecodedInstruction
-from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
+#from reservationstation import StoreBuffer
+from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE,TYPE_MEMORY_FORWARDING
 
 # Project description values
 """LATENCIES = {
@@ -20,6 +21,7 @@ LATENCIES = {
     TYPE_DEC_MULTP: 15,
     TYPE_MEMORY_LOAD: 5,
     TYPE_MEMORY_STORE: 5,
+    TYPE_MEMORY_FORWARDING: 1,
 }
 
 def subi(v1, v2):
@@ -120,23 +122,36 @@ class FunctionalUnit:
 
 
 class MemoryLoadFunctionalUnit(FunctionalUnit):
-    def __init__(self, unit_type: str, cdb: CentralDataBus, mem:HardMemory) -> None:
+    def __init__(self, unit_type: str, cdb: CentralDataBus, mem:HardMemory, sd_buffer) -> None:
         super().__init__(unit_type, cdb)
         self.mem = mem
+        self.sd_buffer = sd_buffer
 
     def execute(self, id: int, rob: str, op: str, v1: number, v2: number) -> bool:
         if self.busy or self.used_at_this_cycle:
             return False
-        
         if op not in OP_FUNC_MAPPING and op != "LD":
             raise Exception("Not supported instruction:", op, "FuncUnit:",self.unit_type)
         
         def wrap_load(v1, v2):
             return self.mem.load(int(v1//4))
-        
         func = wrap_load
-        
         self.current_counter = self.latency-1
+        
+        ### Store forwarding ###
+        # Check SD queue for a matching entry:
+        forwarded_result = None
+        for se in self.sd_buffer.entries:
+            if not se.busy:
+                continue
+            if se.id <= id and se.val2+se.offset == v1:
+                forwarded_result = se.val1
+                def wrap_forwarding_from_a_store(v1, v2):
+                    return forwarded_result
+                func = wrap_forwarding_from_a_store
+                self.current_counter = LATENCIES[TYPE_MEMORY_FORWARDING]-1
+                break
+
         self.busy = True
         self.ready = False
 

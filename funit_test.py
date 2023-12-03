@@ -1,12 +1,27 @@
 import unittest
 from cdb import CentralDataBus
-from funit import FunctionalUnit, MemoryLoadFunctionalUnit, AddressResolver
-from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
+from funit import FunctionalUnit, MemoryLoadFunctionalUnit, AddressResolver, LATENCIES
+from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE,TYPE_MEMORY_FORWARDING, number
 from memory import Memory
 from decoder import Instruction as DecodedInstruction
 
-class TestFUs(unittest.TestCase):
+class MockEntry():
+    def __init__(self, id, v1, v2, offset) -> None:
+        self.id = id
+        self.val1 = v1
+        self.val2 = v2
+        self.offset = offset
+        self.busy = True
+        
+class MockSDBuffer():
+    def __init__(self) -> None:
+        self.entries = []
+        pass
+    def add_sd_request(self, id:int, dest:int, value:number, offset:int) -> None:
+        self.entries.append(MockEntry(id, value, dest, offset))
 
+
+class TestFUs(unittest.TestCase):
     def test_finishAdddInCorrectTime(self):
         # Arrange
         cdb = CentralDataBus()
@@ -81,7 +96,7 @@ class TestFUs(unittest.TestCase):
 
         expected_id = id
         expected_value = float(6)
-        expected_latency = 20
+        expected_latency = LATENCIES[TYPE_DEC_MULTP]-1 #20
         actual_id = None
         clock = 0
         fu = FunctionalUnit(TYPE_DEC_MULTP, cdb)
@@ -101,21 +116,54 @@ class TestFUs(unittest.TestCase):
     def test_finishLoadInCorrectTime(self):
         # Arrange
         cdb = CentralDataBus()
-        mem = Memory("", 10)
+        mem = Memory("", 10*4)
 
         id = 1
         rob = "ROB1"
         op = "LD"
-        v1 = 2
+        v1 = 2*4
         expected_value = float(6)
-        mem.store(v1, expected_value)
+        mem.store(v1//4, expected_value)
         v2 = None
 
         expected_id = id
         expected_latency = 4
         actual_id = None
         clock = 0
-        fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, mem)
+        fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, mem, MockSDBuffer())
+        
+        # Action
+        started = fu.execute(id, rob, op, v1, v2)
+
+        # Assert
+        self.assertTrue(started)
+        while actual_id == None:
+            actual_id = fu.produce_result()
+            clock+=1
+        self.assertEqual(expected_latency, clock)
+        self.assertEqual(expected_id, actual_id)
+        self.assertEqual(expected_value, cdb.current_value.value)
+
+    def test_forwarding_from_a_store(self):
+        # Arrange
+        cdb = CentralDataBus()
+        mem = Memory("", 10*4)
+        sd_buff = MockSDBuffer()
+
+        id = 1
+        rob = "ROB1"
+        op = "LD"
+        v1 = 2*4
+        expected_value = float(6)
+        #mem.store(v1//4, expected_value)
+        sd_buff.add_sd_request(1, v1, expected_value, 0)
+        v2 = None
+
+        expected_id = id
+        expected_latency = LATENCIES[TYPE_MEMORY_FORWARDING]
+        actual_id = None
+        clock = 0
+        fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, mem, sd_buff)
         
         # Action
         started = fu.execute(id, rob, op, v1, v2)
