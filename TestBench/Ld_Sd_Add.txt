@@ -1,5 +1,0 @@
-LD R1,4(R1)
-LD R2,0(R2)
-Add.d R4,R2,R1
-SD R4,4(R3)
-Add R3,R2,R4
