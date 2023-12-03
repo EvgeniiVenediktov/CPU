@@ -12,13 +12,13 @@ from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, Mem
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
-PROGRAM_FILENAME = "./TestBench/Sd_Ld_Forwarding.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/Sd_Ld_Forwarding.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Add.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Multi.d.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/add.d.txt" # Checked ✔️
-#PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
+PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -143,7 +143,8 @@ for cycle in range(1,NUM_OF_CYCLES):
         monitor.mark_wb(written_value_id, cycle)
     written_value_id = store_buffer.read_cdb()
     if written_value_id != None:
-        monitor.mark_wb(written_value_id, cycle)
+        pass
+        #monitor.mark_wb(written_value_id, cycle)
 
     #2. If written anything - Monitor.mark_wb(ID, i)
         
@@ -320,6 +321,7 @@ for cycle in range(1,NUM_OF_CYCLES):
 
 ### Create Output TimeTable: ###
 monitor.output()
+monitor.output_with_instructions(raw_instructions=instruction_buffer.get_original_lines())
 
 with open("dump_regs.txt", "w",encoding="utf-8") as f:
     f.write(str(arf))

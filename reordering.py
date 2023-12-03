@@ -145,7 +145,7 @@ class ReorderBuffer(CDBConsumer):
                 return self.show_head_entry().id
 
         for entry in self.entries:
-            if entry.entry_name == result.rob_dest:
+            if entry.entry_name == result.rob_dest and entry.busy:
                 entry.is_ready = True
                 entry.value = result.value
                 return entry.id
