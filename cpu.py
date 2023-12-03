@@ -176,10 +176,9 @@ for cycle in range(1,NUM_OF_CYCLES):
         sd_buf_head = store_buffer.show_head()
         if not rob_head.in_progress and sd_buf_head != None:
             if rob_head.id == sd_buf_head.id:
-                id = store_buffer.try_execute() # TODO add send to SD/LD forwarding buffer
+                id = store_buffer.try_execute() # send to SD/LD forwarding buffer - DONE ✔️
                 if id != None:
                     monitor.mark_mem_start(id, cycle)
-                    #rob_head.in_progress = True # TODO check
                     rob_head.is_ready = 1
                     committed_id = rob.commit()
                     monitor.mark_commit(committed_id, cycle)
