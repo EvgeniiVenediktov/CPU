@@ -11,6 +11,7 @@ class MockEntry():
         self.val1 = v1
         self.val2 = v2
         self.offset = offset
+        self.busy = True
         
 class MockSDBuffer():
     def __init__(self) -> None:

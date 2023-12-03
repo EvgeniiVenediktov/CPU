@@ -67,9 +67,6 @@ MEM_SIZE = 256
 mem_init_file = "init_mem_file.txt"
 hard_memory = Memory(mem_init_file, MEM_SIZE)
 
-memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory)
-memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory)
-
 func_units = [adder_int, adder_dec, multr_dec]
 
 INT_ADDER_RS_LEN = 4 # Demo value
@@ -89,8 +86,12 @@ address_resolver = AddressResolver()
 ## Load/Store Buffers - DONE ✔️
 LD_SD_BUF_LEN = 10 # Demo value
 #LD_SD_BUF_LEN = 3 # Desc value
-load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
+
+memory_storer_fu = MemoryStoreFunctionalUnit(TYPE_MEMORY_STORE, cdb, hard_memory)
 store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
+
+memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory, store_buffer)
+load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 
 
 def end_cycle():
@@ -179,6 +180,7 @@ for cycle in range(1,NUM_OF_CYCLES):
                 if id != None:
                     monitor.mark_mem_start(id, cycle)
                     #rob_head.in_progress = True # TODO check
+                    rob_head.is_ready = 1
                     committed_id = rob.commit()
                     monitor.mark_commit(committed_id, cycle)
                     

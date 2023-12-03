@@ -142,6 +142,8 @@ class MemoryLoadFunctionalUnit(FunctionalUnit):
         # Check SD queue for a matching entry:
         forwarded_result = None
         for se in self.sd_buffer.entries:
+            if not se.busy:
+                continue
             if se.id <= id and se.val2+se.offset == v1:
                 forwarded_result = se.val1
                 def wrap_forwarding_from_a_store(v1, v2):
