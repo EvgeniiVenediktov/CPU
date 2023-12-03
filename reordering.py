@@ -4,7 +4,7 @@ from utils import number
 from registers import RegistersAliasTable
 from decoder import Instruction as DecodedInstruction
 
-class IssuedInstruction: # TODO
+class IssuedInstruction:
     def __init__(self) -> None:
         self.id = 0
         self.op = ""
@@ -138,7 +138,7 @@ class ReorderBuffer(CDBConsumer):
         if result == None:
             return None
         
-        if result.op == "SD":
+        if result.op == "SD": # TODO this probably will need to be changed
             if self.show_head_entry().id == result.id:
                 self.entries[self.head].is_ready = True
                 self.entries[self.head].in_progress = False
