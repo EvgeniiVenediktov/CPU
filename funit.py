@@ -207,9 +207,7 @@ class AddressResolver:
     def resolve_address(self, insrt:DecodedInstruction) -> None|int:
         if self.busy:
             return None
-        # Check for dependency in address: # TODO wrong
-        """if str(insrt.operands[1]).find('R') != -1:
-            return None"""
+
         self.current_clock = self.latency -1
         self.busy = True
         self.inst = insrt

@@ -69,7 +69,7 @@ class TestRS(unittest.TestCase):
             self.assertEqual(val, attrs_float[field], field)
 
     def test_execute_arithmetic(self):
-        self.skipTest("not its another way to handle same-cycle production and execution")
+        self.skipTest("now its another way to handle same-cycle production and execution")
         # Arrange
         cdb = CentralDataBus()
         fu = FunctionalUnit(TYPE_DEC_ADDER, cdb)
@@ -101,7 +101,7 @@ class TestRS(unittest.TestCase):
         self.assertEqual(next_exec_id, expected_next_exec_id)
     
     def test_execute_loads(self):
-        self.skipTest("not its another way to handle same-cycle production and execution")
+        self.skipTest("now its another way to handle same-cycle production and execution")
         # Arrange
         cdb = CentralDataBus()
         mem = Memory('', 10)

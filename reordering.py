@@ -3,6 +3,7 @@ from cdbconsumer import CDBConsumer
 from utils import number
 from registers import RegistersAliasTable
 from decoder import Instruction as DecodedInstruction
+from snapshooter import Snapshooter
 
 class IssuedInstruction:
     def __init__(self) -> None:
@@ -30,7 +31,7 @@ class Entry:
         self.value:number = None
         self.is_ready:bool = False
         self.in_progress:bool = False
-        pass # TODO
+        pass
     def __str__(self) -> str:
         return str(vars(self))
 
@@ -40,7 +41,8 @@ class ReorderBuffer(CDBConsumer):
         self.entries = [Entry(f'ROB{i}') for i in range(len)]
         self.head = 0
         self.rat = rat
-        # TODO
+        self.snapshooter = Snapshooter()
+
     def __str__(self) -> str:
         return str(vars(self))
     
@@ -184,4 +186,17 @@ class ReorderBuffer(CDBConsumer):
             nh = nh % len(self.entries)
         self.head = nh
 
-        
+    def create_snapshot(self, branch_instr_id:int, cycle:int) -> None:
+        data = {
+            "entries":self.entries,
+            "variables_to_get":self.variables_to_get,
+            "head":self.head,
+        }
+        self.snapshooter.create_snapshot(data, branch_instr_id, cycle)
+    
+    def recover_from_snapshot(self, branch_instr_id:int, cycle:int) -> None:
+        data = self.snapshooter.pop_last_matching_snapshot(branch_instr_id, cycle)
+
+        self.entries = data["entries"]
+        self.head = data["head"]
+        self.variables_to_get = data["variables_to_get"]

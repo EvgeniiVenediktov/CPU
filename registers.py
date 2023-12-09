@@ -1,5 +1,6 @@
 # Registers package: Registers Alias Table and Architected Register File
 from utils import number, IssuedInstruction
+from snapshooter import Snapshooter
 
 def parse_register_init_values(fname:str) -> dict:
     r = {}
@@ -83,6 +84,7 @@ class RegistersAliasTable:
         for i in range(length_f):
             name = f'F{i}'
             self.entries[name] = Entry(name=name, default_value=name) 
+        self.snapshooter = Snapshooter()
     
     def __str__(self) -> str:
         s  = "┌──────┬───────┐\n"
@@ -127,3 +129,14 @@ class RegistersAliasTable:
         if self.does_entry_match_name(name, name):
             return self.get_reg_value(name)
         return self.get_alias_for_reg(name)
+    
+    def create_snapshot(self, branch_instr_id:int, cycle:int) -> None:
+        data = {
+            "entries":self.entries,
+        }
+        self.snapshooter.create_snapshot(data, branch_instr_id, cycle)
+    
+    def recover_from_snapshot(self, branch_instr_id:int, cycle:int) -> None:
+        data = self.snapshooter.pop_last_matching_snapshot(branch_instr_id, cycle)
+        self.entries = data["entries"]
+        

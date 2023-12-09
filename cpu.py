@@ -12,13 +12,13 @@ from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, Mem
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
-#PROGRAM_FILENAME = "./TestBench/Sd_Ld_Forwarding.txt" # Checked ✔️
+PROGRAM_FILENAME = "./TestBench/Sd_Ld_Forwarding.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Add.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Multi.d.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/add.d.txt" # Checked ✔️
-PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -92,6 +92,48 @@ store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
 
 memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory, store_buffer)
 load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
+
+# Snapshots
+## RAT snapshot - TODO - TEST
+## ROB snapshot - TODO - TEST
+## RS snapshot - TODO - TEST
+## LD&SD queue snapshot - TODO - TEST
+
+# TODO: Should SD be in MEM stage at all? Or it should be shown as committing for N cycles?
+
+def create_snapshots(branch_instr_id:int, cycle:int) -> None:
+    # Create RS snapshots
+    for rs_type in res_stations:
+        rs = res_stations[rs_type]
+        rs.create_snapshot(branch_instr_id, cycle)
+    
+    # Create LD & SD queues snapshots
+    load_buffer.create_snapshot(branch_instr_id, cycle)
+    store_buffer.create_snapshot(branch_instr_id, cycle)
+
+    # Create ROB snapshot
+    rob.create_snapshot(branch_instr_id, cycle)
+
+    # Create RAT snapshot
+    rat.create_snapshot(branch_instr_id, cycle)
+
+
+def recover_from_snapshot(branch_instr_id:int, cycle:int) -> None:
+    """`cycle` is used to choose the most recent snapshot if `branch_instr_id` is not unique"""
+    # Recover RS from snapshots
+    for rs_type in res_stations:
+        rs = res_stations[rs_type]
+        rs.recover_from_snapshot(branch_instr_id, cycle)
+    
+    # Recover LD & SD queues from snapshots
+    load_buffer.recover_from_snapshot(branch_instr_id, cycle)
+    store_buffer.recover_from_snapshot(branch_instr_id, cycle)
+
+    # Recover ROB from snapshot
+    rob.recover_from_snapshot(branch_instr_id, cycle)
+
+    # Recover RAT from snapshot
+    rat.recover_from_snapshot(branch_instr_id, cycle)
 
 
 def end_cycle():
