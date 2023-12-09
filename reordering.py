@@ -180,6 +180,12 @@ class ReorderBuffer(CDBConsumer):
         self.set_new_head()
         return entry.id
     
+    def is_everything_commited(self) -> bool:
+        for e in self.entries:
+            if e.busy or e.in_progress or e.is_ready:
+                return False
+        return True
+    
     def set_new_head(self) -> None:
         nh = self.head + 1
         if nh >= len(self.entries):

@@ -88,6 +88,11 @@ class InstBuff:
             self.prev_index = self.index
             self.index = i
             return(self.buffer[i])
+    
+    def set_index(self, i:int) -> None:
+        """Is to be used only after branch instructions"""
+        self.prev_index = self.index
+        self.index = i
         
     def return_to_prev_index(self) -> None:
         self.index = self.prev_index

@@ -12,13 +12,14 @@ from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, Mem
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
-PROGRAM_FILENAME = "./TestBench/Sd_Ld_Forwarding.txt" # Checked ✔️
+#PROGRAM_FILENAME = "./TestBench/Sd_Ld_Forwarding.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Hazards.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/RSFull.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Add.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/Multi.d.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/add.d.txt" # Checked ✔️
 #PROGRAM_FILENAME = "./TestBench/addi.txt" # Checked ✔️
+PROGRAM_FILENAME = "./TestBench/test_eof.txt"
 
 ### Create instances of all modules: ###
 # Monitor - DONE ✔️
@@ -94,12 +95,10 @@ memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory, 
 load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 
 # Snapshots
-## RAT snapshot - TODO - TEST
-## ROB snapshot - TODO - TEST
-## RS snapshot - TODO - TEST
-## LD&SD queue snapshot - TODO - TEST
-
-# TODO: Should SD be in MEM stage at all? Or it should be shown as committing for N cycles?
+## RAT snapshot - TEST - DONE ✔️
+## ROB snapshot - DONE ✔️
+## RS snapshot - DONE ✔️
+## LD&SD queue snapshot - DONE ✔️
 
 def create_snapshots(branch_instr_id:int, cycle:int) -> None:
     # Create RS snapshots
@@ -148,9 +147,26 @@ def end_cycle():
     load_buffer.end_cycle()
     store_buffer.end_cycle()
 
+# vars for mispred recovery
+need_to_recover = False
+actual_pc = -1
+branch_instr_id = -1
+
 ### Run for N clock cycles: ###
 NUM_OF_CYCLES = 300
 for cycle in range(1,NUM_OF_CYCLES):
+
+    # Pipeline recovery from branch misprecdiction:
+    if need_to_recover:
+        need_to_recover = False
+        # recover pipeline state
+        recover_from_snapshot(branch_instr_id, cycle)
+        # set Instruction Buffer index == `actual_pc`
+        # TODO
+
+        # As recovery takes 1 whole cycle, finish the cycle after recovery
+        continue
+
     ### COMMIT Stage
     """
     Commit a ready instruction from ROB:
@@ -297,11 +313,17 @@ for cycle in range(1,NUM_OF_CYCLES):
     rs_type = ""
     t = instr.inst_type
     if t == "EOF":
-        print(f"EOF, finish of simulation. Cycle #{cycle}")
-        break
+        # Check that ROB is empty
+        if rob.is_everything_commited():
+            print(f"EOF, finish of simulation. Cycle #{cycle}")
+            break
+        else:
+            instruction_buffer.return_to_prev_index()
+            end_cycle()
+            continue
     if t == "LD" or t == "SD": 
-        # Syntax: SD F2,10(R3) // F2 - value, 10+R3 - source
-        # Syntax: LD F2,10(R3) // F2 - dest, 10+R3 - source
+        # Syntax: SD F2,8(R3) // F2 - value, 8+R3 - source
+        # Syntax: LD F2,8(R3) // F2 - dest, 8+R3 - source
         if t == "LD":
             instr.original_dest = instr.operands[0]
         if t == "SD":
