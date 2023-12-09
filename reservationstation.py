@@ -3,6 +3,7 @@ from cdb import CentralDataBus
 from cdbconsumer import CDBConsumer
 from funit import FunctionalUnit, AddressResolver
 from utils import number, IssuedInstruction
+from snapshooter import Snapshooter
 
 
 INT_ADDER_RS_TYPE = "int_adder"
@@ -70,6 +71,7 @@ class ReservationStation(CDBConsumer):
         self.entries:list[Entry] = [Entry() for _ in range(len)]
         self.funit:FunctionalUnit = funit
         self.busy_this_cycle = []
+        self.snapshooter = Snapshooter()
 
     def __str__(self) -> str:
         return str(vars(self))
@@ -102,7 +104,7 @@ class ReservationStation(CDBConsumer):
                 return True
         return False
     
-    def read_cdb(self) -> int|None: # TODO TEST
+    def read_cdb(self) -> int|None:
         result = self.fetch_from_cdb()
         if result == None:
             return None
@@ -136,6 +138,21 @@ class ReservationStation(CDBConsumer):
                     e.in_progress = True
                     return e.id, result_is_ready
         return None, False
+    
+    def create_snapshot(self, branch_instr_id:int, cycle:int) -> None:
+        data = {
+            "entries":self.entries,
+            "busy_this_cycle":self.busy_this_cycle,
+            "variables_to_get":self.variables_to_get,
+        }
+        self.snapshooter.create_snapshot(data, branch_instr_id, cycle)
+    
+    def recover_from_snapshot(self, branch_instr_id:int, cycle:int) -> None:
+        data = self.snapshooter.pop_last_matching_snapshot(branch_instr_id, cycle)
+
+        self.entries = data["entries"]
+        self.busy_this_cycle = data["busy_this_cycle"]
+        self.variables_to_get = data["variables_to_get"]
 
 
 class LoadBuffer(ReservationStation):
@@ -161,7 +178,6 @@ class LoadBuffer(ReservationStation):
 class StoreBuffer(ReservationStation):
     def __init__(self, cdb: CentralDataBus, funit: FunctionalUnit, len=3) -> None:
         super().__init__(cdb, funit, len)
-        # TODO
 
     def show_head(self) -> Entry|None:
         if len(self.entries) == 0:

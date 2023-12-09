@@ -93,6 +93,48 @@ store_buffer = StoreBuffer(cdb, memory_storer_fu, LD_SD_BUF_LEN)
 memory_loader_fu = MemoryLoadFunctionalUnit(TYPE_MEMORY_LOAD, cdb, hard_memory, store_buffer)
 load_buffer = LoadBuffer(cdb, memory_loader_fu, LD_SD_BUF_LEN)
 
+# Snapshots
+## RAT snapshot - TODO - TEST
+## ROB snapshot - TODO - TEST
+## RS snapshot - TODO - TEST
+## LD&SD queue snapshot - TODO - TEST
+
+# TODO: Should SD be in MEM stage at all? Or it should be shown as committing for N cycles?
+
+def create_snapshots(branch_instr_id:int, cycle:int) -> None:
+    # Create RS snapshots
+    for rs_type in res_stations:
+        rs = res_stations[rs_type]
+        rs.create_snapshot(branch_instr_id, cycle)
+    
+    # Create LD & SD queues snapshots
+    load_buffer.create_snapshot(branch_instr_id, cycle)
+    store_buffer.create_snapshot(branch_instr_id, cycle)
+
+    # Create ROB snapshot
+    rob.create_snapshot(branch_instr_id, cycle)
+
+    # Create RAT snapshot
+    rat.create_snapshot(branch_instr_id, cycle)
+
+
+def recover_from_snapshot(branch_instr_id:int, cycle:int) -> None:
+    """`cycle` is used to choose the most recent snapshot if `branch_instr_id` is not unique"""
+    # Recover RS from snapshots
+    for rs_type in res_stations:
+        rs = res_stations[rs_type]
+        rs.recover_from_snapshot(branch_instr_id, cycle)
+    
+    # Recover LD & SD queues from snapshots
+    load_buffer.recover_from_snapshot(branch_instr_id, cycle)
+    store_buffer.recover_from_snapshot(branch_instr_id, cycle)
+
+    # Recover ROB from snapshot
+    rob.recover_from_snapshot(branch_instr_id, cycle)
+
+    # Recover RAT from snapshot
+    rat.recover_from_snapshot(branch_instr_id, cycle)
+
 
 def end_cycle():
     for fu in func_units:
@@ -143,7 +185,8 @@ for cycle in range(1,NUM_OF_CYCLES):
         monitor.mark_wb(written_value_id, cycle)
     written_value_id = store_buffer.read_cdb()
     if written_value_id != None:
-        monitor.mark_wb(written_value_id, cycle)
+        pass
+        #monitor.mark_wb(written_value_id, cycle)
 
     #2. If written anything - Monitor.mark_wb(ID, i)
         
@@ -320,6 +363,7 @@ for cycle in range(1,NUM_OF_CYCLES):
 
 ### Create Output TimeTable: ###
 monitor.output()
+monitor.output_with_instructions(raw_instructions=instruction_buffer.get_original_lines())
 
 with open("dump_regs.txt", "w",encoding="utf-8") as f:
     f.write(str(arf))

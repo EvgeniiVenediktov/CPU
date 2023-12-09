@@ -1,6 +1,6 @@
 type number = int | float
 
-class IssuedInstruction: # TODO
+class IssuedInstruction:
     def __init__(self) -> None:
         self.id = 0
         self.op = ""

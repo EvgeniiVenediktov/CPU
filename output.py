@@ -1,3 +1,6 @@
+
+INSTRUCTION_LEN = 15
+
 class Monitor():
     def __init__(self) -> None:
         self.instlist:list[MonitoredInstruction] = []
@@ -13,6 +16,21 @@ class Monitor():
                 file.write('|{:^5} | {:^7} | {:^5}-{:^5} | {:^5}-{:^5} | {:^6} | {:^9}|\n'.format(
                     instr.id, instr.issue, instr.ex_start, instr.ex_end, instr.mem_start,instr.mem_end, instr.wb, instr.commit))
             file.write("└──────┴─────────┴─────────────┴─────────────┴────────┴──────────┘")
+        file.close()
+    
+    def output_with_instructions(self, raw_instructions:list[str]):
+        assert len(raw_instructions) >= len(self.instlist)
+
+        """Writes an output timetable to output_annotated.txt"""
+        sorted_instrs = sorted(self.instlist, key= lambda instructions: instructions.id)
+        with open('output_annotated.txt', 'w', encoding="utf-8") as file:
+            file.write("{:^18}┌──────┬─────────┬─────────────┬─────────────┬────────┬──────────┐\n".format(""))
+            file.write("{:^18}|--Id--|--Issue--|-----Exe-----|-----Mem-----|--Wrbk--|--Commit--|\n".format(""))
+            file.write("{:^18}├──────┼─────────┼─────────────┼─────────────┼────────┼──────────┤\n".format(""))
+            for i, instr in enumerate(sorted_instrs):
+                file.write('{:<18}|{:^5} | {:^7} | {:^5}-{:^5} | {:^5}-{:^5} | {:^6} | {:^9}|\n'.format(raw_instructions[i].replace("\n", ""),
+                    instr.id, instr.issue, instr.ex_start, instr.ex_end, instr.mem_start,instr.mem_end, instr.wb, instr.commit))
+            file.write("{:^18}└──────┴─────────┴─────────────┴─────────────┴────────┴──────────┘".format(""))
         file.close()
 
     def mark_issue(self, id, issue_cycle):
