@@ -133,7 +133,13 @@ class ReservationStation(CDBConsumer):
         #self.entries = sorted(self.entries, key=lambda e: e.id)
         for i, e in enumerate(self.entries):
             if e.val1 != None and e.val2 != None and not e.in_progress and i not in self.busy_this_cycle:
-                is_issued, result_is_ready = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
+                is_issued = False
+                if e.op == "Beq":
+                    is_issued, result_is_ready = self.funit.execute(e.id, e.rob, e.op, e.val1==e.val2, (e.id, e.offset))
+                elif e.op == "Bne":
+                    is_issued, result_is_ready = self.funit.execute(e.id, e.rob, e.op, e.val1!=e.val2, (e.id, e.offset))
+                else:
+                    is_issued, result_is_ready = self.funit.execute(e.id, e.rob, e.op, e.val1, e.val2)
                 if is_issued:
                     e.in_progress = True
                     return e.id, result_is_ready

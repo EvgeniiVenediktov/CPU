@@ -34,6 +34,14 @@ def addd(v1, v2):
     return float(v1+v2)
 def mul(v1, v2):
     return float(v1*v2)
+def beq(eq:bool, pc_offset:tuple[int,int]):
+    if eq:
+        return (True, pc_offset[0]+pc_offset[1])
+    return (False, pc_offset[0]+1)
+def bne(neq:bool, pc_offset:tuple[int,int]):
+    if neq:
+        return (True, pc_offset[0]+pc_offset[1])
+    return (False, pc_offset[0]+1)
 
 OP_FUNC_MAPPING:dict[str] = {
     "Add":addi,
@@ -42,6 +50,8 @@ OP_FUNC_MAPPING:dict[str] = {
     "Sub":subi,
     "Sub.d":subd,
     "Mult.d":mul,
+    "Beq":beq,
+    "Bne":bne,
 }
 
 class FunctionalUnit:

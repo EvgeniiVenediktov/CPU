@@ -9,6 +9,7 @@ from output import Monitor
 from reordering import ReorderBuffer
 from registers import ArchitectedRegisterFile, RegistersAliasTable, parse_register_init_values
 from funit import FunctionalUnit, AddressResolver, MemoryLoadFunctionalUnit, MemoryStoreFunctionalUnit
+from branchpredictor import BranchPredictor
 from utils import TYPE_INT_ADDER,TYPE_DEC_ADDER,TYPE_DEC_MULTP,TYPE_MEMORY_LOAD,TYPE_MEMORY_STORE
 from utils import number
 
@@ -52,7 +53,8 @@ rat = RegistersAliasTable(arf, REG_R_LEN, REG_F_LEN)
 ROB_LEN = 64 # Demo value
 rob = ReorderBuffer(cdb, rat, len=ROB_LEN)
 
-# Branch predictor - TODO - in the next iteration
+# Branch predictor - TODO - in progress ...
+branch_predictor = BranchPredictor()
 
 # Execution Module
 ## Functional Modules (Adders, Multipliers) - DONE ✔️
@@ -134,6 +136,7 @@ def recover_from_snapshot(branch_instr_id:int, cycle:int) -> None:
     # Recover RAT from snapshot
     rat.recover_from_snapshot(branch_instr_id, cycle)
 
+branch_instructions_ids = []
 
 def end_cycle():
     for fu in func_units:
@@ -162,8 +165,7 @@ for cycle in range(1,NUM_OF_CYCLES):
         # recover pipeline state
         recover_from_snapshot(branch_instr_id, cycle)
         # set Instruction Buffer index == `actual_pc`
-        # TODO
-
+        instruction_buffer.set_index(actual_pc)
         # As recovery takes 1 whole cycle, finish the cycle after recovery
         continue
 
@@ -185,24 +187,41 @@ for cycle in range(1,NUM_OF_CYCLES):
         something_was_commited = True
 
     ### WRITEBACK Stage
+    wb_id = {} # At most 1 id
     #1. Check CDB and update values by all consumers:
     written_value_id = None
     written_value_id = rob.read_cdb()
     if written_value_id != None:
+        wb_id.add(written_value_id)
         monitor.mark_wb(written_value_id, cycle)
     for rs_name in res_stations:
         rs = res_stations[rs_name]
         written_value_id = rs.read_cdb()
         if written_value_id != None:
+            wb_id.add(written_value_id)
             monitor.mark_wb(written_value_id, cycle)
 
     written_value_id = load_buffer.read_cdb()
     if written_value_id != None:
+        wb_id.add(written_value_id)
         monitor.mark_wb(written_value_id, cycle)
     written_value_id = store_buffer.read_cdb()
     if written_value_id != None:
+        wb_id.add(written_value_id)
         pass
-        #monitor.mark_wb(written_value_id, cycle)
+    #1.1. Check if the WB instr ID is branch:
+    for v in wb_id:
+        if v in branch_instructions_ids:
+            # Get resolved address
+            take, addr = cdb.current_value
+
+            # Check if the prediction was right
+            # TODO
+
+            # If prediction was wrong:
+            need_to_recover = True
+            actual_pc = addr
+            branch_instr_id = v
 
     #2. If written anything - Monitor.mark_wb(ID, i)
         
@@ -221,6 +240,7 @@ for cycle in range(1,NUM_OF_CYCLES):
     2. Start loading/storing from the LD/SD buffer
     3. Set mem_busy_counter = specific num of CC
     """
+
     #1. Try producing result to CDB from Loader and Storer
     id = memory_loader_fu.produce_result()
     if id != None:
@@ -342,11 +362,11 @@ for cycle in range(1,NUM_OF_CYCLES):
         end_cycle()
         continue
     
-    elif t == "Add" or t == "Addi" or t == "Sub":
+    elif t=="Add" or t=="Addi" or t=="Sub" or t=="Beq" or t=="Bne":
         rs_type = INT_ADDER_RS_TYPE
-    elif t == "Add.d" or t == "Sub.d":
+    elif t=="Add.d" or t=="Sub.d":
         rs_type = DEC_ADDER_RS_TYPE
-    elif t == "Mult.d":
+    elif t=="Mult.d":
         rs_type = DEC_MULTP_RS_TYPE
     # TODO add support of Branch instructions
     
@@ -375,6 +395,17 @@ for cycle in range(1,NUM_OF_CYCLES):
     success = matching_rs.add_instruction(issued_instr)
     if not success:
         raise Exception("failed to add instuction to a RS", str(issued_instr), str(matching_rs))
+    
+    #4.1 Predict address if it is a Branch instruction
+    if t in ["Beq", "Bne"]:
+        # Record branch instr id
+        branch_instructions_ids.append(instr.id)
+        # Predict address
+        addr, take = branch_predictor.predict_address(issued_instr.id)
+        # Set new index in Instruction Buffer
+        instruction_buffer.set_index(addr)
+        # Create a checkpoint for pipeline
+        create_snapshots(issued_instr.id, cycle)
 
     #5. Monitor.mark_issue(ID, i)
     monitor.mark_issue(instr.id, cycle)

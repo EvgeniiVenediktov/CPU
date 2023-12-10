@@ -65,6 +65,8 @@ class ReorderBuffer(CDBConsumer):
             if entry.type == "SD":
                 orig_dest = "MEM"
                 s = 0
+            if entry.type == "Beq" or entry.type == "Bne":
+                orig_dest = "Branch"
             entry.busy = True
             entry.dest = orig_dest
             entry.id = instr.id
@@ -112,7 +114,7 @@ class ReorderBuffer(CDBConsumer):
             issi.dep_right = deps[1]
             issi.offset = instr.offset
 
-            if orig_dest != "MEM":
+            if orig_dest != "MEM" and orig_dest != "Branch":
                 self.rat.reserve_alias(issi)
 
             entry.busy = True
@@ -140,7 +142,7 @@ class ReorderBuffer(CDBConsumer):
         if result == None:
             return None
         
-        if result.op == "SD": # TODO this probably will need to be changed
+        if result.op == "SD":
             if self.show_head_entry().id == result.id:
                 self.entries[self.head].is_ready = True
                 self.entries[self.head].in_progress = False
@@ -173,6 +175,8 @@ class ReorderBuffer(CDBConsumer):
         entry.busy = False
         entry.in_progress = False
         entry.is_ready = False
+        if entry.dest == "Branch":
+            return entry.id
         if entry.value != None:
             self.rat.set_reg_value(entry.dest, entry.value)
         if self.rat.does_entry_match_name(entry.dest, entry.entry_name):
