@@ -1,4 +1,4 @@
-# Computer Architecture 1 - Project 1
+# Computer Architecture - Tomasulo Algorithm CPU simulation
 ## Evgenii Venediktov - Tyler Yarington
 
 # To run:
